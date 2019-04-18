@@ -1,0 +1,17 @@
+<library path="lib/libautoware_launcher">
+  <class name="Control panel"
+         type="Control_Panel"
+         base_class_type="rviz::Panel">
+    <description>
+      Autoware control_panel plugin
+    </description>
+  </class>
+
+  <class name="Quick start panel"
+         type="Quick_Start_Panel"
+         base_class_type="rviz::Panel">
+    <description>
+      Autoware quick_start_panel plugin
+    </description>
+  </class>
+</library>
