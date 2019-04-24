@@ -1,4 +1,4 @@
-<library path="lib/libautoware_launcher">
+<library path="lib/librviz_autoware_launcher">
   <class name="Control panel"
          type="Control_Panel"
          base_class_type="rviz::Panel">
