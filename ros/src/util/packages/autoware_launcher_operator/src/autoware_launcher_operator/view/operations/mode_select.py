@@ -6,14 +6,9 @@ from PyQt5 import QtWidgets
 
 class AwModeSelectWidget(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwModeSelectWidget, self).__init__()
-        # layout = QtWidgets.QVBoxLayout()
-
-        # self.label = QtWidgets.QLabel('Mode Select')
-        # layout.addWidget(self.label)
-
-        # self.setLayout(layout)
+        self.context = context
 
         # button
         self.real_button = QtWidgets.QPushButton('REAL')

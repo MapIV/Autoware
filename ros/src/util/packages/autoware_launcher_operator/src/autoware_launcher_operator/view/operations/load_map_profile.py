@@ -6,8 +6,9 @@ from PyQt5 import QtWidgets
 
 class AwLoadMapProfileWidget(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwLoadMapProfileWidget, self).__init__()
+        self.context = context
 
         # pull down menu
         self.pdMenu = QtWidgets.QComboBox()

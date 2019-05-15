@@ -8,8 +8,9 @@ from ..plugins.basic import AwToggleSwitch
 
 class AwToggleGatewayWidget(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwToggleGatewayWidget, self).__init__()
+        self.context = context
 
         layout = QtWidgets.QVBoxLayout()
 

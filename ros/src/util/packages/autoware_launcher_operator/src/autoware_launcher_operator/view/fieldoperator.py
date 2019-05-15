@@ -21,9 +21,9 @@ from .operations import AwToggleGatewayWidget
 
 class AwFieldOperatorPanel(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwFieldOperatorPanel, self).__init__()
-        self.guimgr = guimgr
+        self.context = context
 
         # self.awlogo = QtWidgets.QLabel()
         # pixmap = QtGui.QPixmap(myutils.package("resources/autoware_logo.png"))
@@ -33,15 +33,15 @@ class AwFieldOperatorPanel(QtWidgets.QWidget):
 
         layout = QtWidgets.QGridLayout()
 
-        self.main_view = AwMainViewWidget(self.guimgr)
-        self.mode_select = AwModeSelectWidget(self.guimgr)
-        self.load_map_profile = AwLoadMapProfileWidget(self.guimgr)
-        self.load_computing_profile = AwLoadComputingProfileWidget(self.guimgr)
-        self.load_map = AwLoadMapWidget(self.guimgr)
-        self.computing = AwComputingWidget(self.guimgr)
-        self.open_rviz = AwOpenRvizWidget(self.guimgr)
-        self.logging = AwToggleLoggingWidget(self.guimgr)
-        self.gateway = AwToggleGatewayWidget(self.guimgr)
+        self.main_view = AwMainViewWidget(self.context)
+        self.mode_select = AwModeSelectWidget(self.context)
+        self.load_map_profile = AwLoadMapProfileWidget(self.context)
+        self.load_computing_profile = AwLoadComputingProfileWidget(self.context)
+        self.load_map = AwLoadMapWidget(self.context)
+        self.computing = AwComputingWidget(self.context)
+        self.open_rviz = AwOpenRvizWidget(self.context)
+        self.logging = AwToggleLoggingWidget(self.context)
+        self.gateway = AwToggleGatewayWidget(self.context)
 
         # self.set_style("background-color:red;")
         # self.set_style("#baseWidget {border:2px solid black;}")
@@ -74,6 +74,6 @@ class AwFieldOperatorPanel(QtWidgets.QWidget):
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    w = AwFieldOperatorPanel('dummy')
+    w = AwFieldOperatorPanel('dummy context')
     w.show()
     sys.exit(app.exec_())

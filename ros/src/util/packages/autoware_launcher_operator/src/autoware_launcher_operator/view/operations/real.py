@@ -1,108 +1,124 @@
-from python_qt_binding import QtCore
-from python_qt_binding import QtWidgets
-from autoware_launcher.core import myutils
-from autoware_launcher.gui  import widgets
+# from python_qt_binding import QtCore
+# from python_qt_binding import QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+
+from ..plugins.basic import AwNodeListWidget, AwNode, QHLine
 
 
 # TODO
 class AwRealSensorWidget(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwRealSensorWidget, self).__init__()
-        self.rosbag_mode_proc = QtCore.QProcess(self)
-        self.rosbag_info_proc = QtCore.QProcess(self)
-        self.rosbag_play_proc = QtCore.QProcess(self)
+        self.context = context
 
-        self.rosbag_file   = widgets.AwFileSelect(self)
-        self.rosbag_info   = QtWidgets.QPushButton("Info")
-        self.rosbag_text   = QtWidgets.QLabel("No information")
-        self.rosbag_enable = QtWidgets.QCheckBox()
-        self.rosbag_label  = QtWidgets.QLabel("Simulation Mode")
-        self.rosbag_play   = QtWidgets.QPushButton("Play")
-        self.rosbag_stop   = QtWidgets.QPushButton("Stop")
-        self.rosbag_pause  = QtWidgets.QPushButton("Pause")
-        self.rosbag_state  = QtWidgets.QLabel()
-        #self.rosbag_stime  = QtWidgets.QLineEdit()
-        #start time
-        #repeat
-        #rate
+        #  nodes
+        # self.sensing_node_labels_layout = QtWidgets.QVBoxLayout()
+        # self.load_sensing_profile()
+        # self.update_sensing_node_labels_layout()
 
-        self.rosbag_enable.stateChanged.connect(self.simulation_mode_changed)
-        self.rosbag_info.clicked.connect(self.rosbag_info_requested)
-        self.rosbag_info_proc.finished.connect(self.rosbag_info_completed)
+        # button
+        self.run_sensing_btn = QtWidgets.QPushButton('Run Sensing')
+        self.run_sensing_btn.clicked.connect(self.run_sensing_btn_clicked)
+        self.exit_sensing_btn = QtWidgets.QPushButton('Exit Sensing')
+        self.exit_sensing_btn.clicked.connect(self.exit_sensing_btn_clicked)
+        self.engage_actuation_btn = QtWidgets.QPushButton('Engage Actuation')
+        self.engage_actuation_btn.clicked.connect(self.engage_actuation_btn_clicked)
+        self.disengage_actuation_btn = QtWidgets.QPushButton('Disegage Actuation')
+        self.disengage_actuation_btn.clicked.connect(self.disengage_actuation_btn_clicked)
 
-        self.rosbag_play.clicked.connect(self.rosbag_started)
-        self.rosbag_stop.clicked.connect(self.rosbag_stopped)
-        self.rosbag_play_proc.finished.connect(self.rosbag_finished)
-        self.rosbag_play_proc.readyReadStandardOutput.connect(self.rosbag_output)
+        # pull down menu
+        self.sensing_profile_pdmenu = QtWidgets.QComboBox()
+        self.set_sensing_profile_contents()
+        self.sensing_profile_pdmenu.currentTextChanged.connect(self.on_sensing_profile_changed)
+        self.actuation_profile_pdmenu = QtWidgets.QComboBox()
+        self.set_actuation_profile_contents()
+        self.actuation_profile_pdmenu.currentTextChanged.connect(self.on_actuation_profile_changed)
 
-        self.rosbag_pause.setCheckable(True)
-        self.rosbag_pause.toggled.connect(self.rosbag_paused)
+        #  node list
+        self.sensing_nodes = []
+        self.sensing_node_list = AwNodeListWidget()
+        self.actuation_nodes = []
+        self.actuation_node_list = AwNodeListWidget()
 
-        self.setStyleSheet("QCheckBox::indicator { width: 28px; height: 28px; }")
-        self.rosbag_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
-        self.rosbag_text.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
-        
-        layout = QtWidgets.QGridLayout()
-        layout.addWidget(self.rosbag_enable,      0, 0)
-        layout.addWidget(self.rosbag_label,       0, 1)
-        layout.addWidget(self.rosbag_play,        0, 2)
-        layout.addWidget(self.rosbag_stop,        0, 3)
-        layout.addWidget(self.rosbag_pause,       0, 4)
-        layout.addWidget(self.rosbag_state,       1, 0, 1, 5)
-        layout.addWidget(self.rosbag_file.path,   2, 0, 1, 3)
-        layout.addWidget(self.rosbag_file.button, 2, 3)
-        layout.addWidget(self.rosbag_info,        2, 4)
-        layout.addWidget(self.rosbag_text,        3, 0, 1, 5)
+        # set layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.sensing_profile_pdmenu)
+        sub_layout1 = QtWidgets.QHBoxLayout()
+        sub_layout1.addWidget(self.run_sensing_btn)
+        sub_layout1.addWidget(self.exit_sensing_btn)
+        layout.addLayout(sub_layout1)
+        layout.addWidget(self.sensing_node_list)
+        layout.addWidget(QHLine())
+        layout.addWidget(self.actuation_profile_pdmenu)
+        sub_layout2 = QtWidgets.QHBoxLayout()
+        sub_layout2.addWidget(self.engage_actuation_btn)
+        sub_layout2.addWidget(self.disengage_actuation_btn)
+        layout.addLayout(sub_layout2)
+        layout.addWidget(self.actuation_node_list)
         self.setLayout(layout)
-        self.simulation_mode_disabled()
 
-    def simulation_mode_changed(self, state):
-        if state == QtCore.Qt.Checked:   self.simulation_mode_enabled()
-        if state == QtCore.Qt.Unchecked: self.simulation_mode_disabled()
+    def run_sensing_btn_clicked(self):
+        print('run sensing')
 
-    def simulation_mode_enabled(self):
-        self.rosbag_mode_proc.start("rosparam set /use_sim_time true")
-        self.rosbag_stopped()
+        # TODO run launch file
+        nodes = [
+            AwNode(name='lidar', status=True),
+            AwNode(name='camera', status=True),
+            AwNode(name='camera_lidar', status=True),
+            AwNode(name='multi_lidar', status=True),
+            AwNode(name='lidar_preprocessor', status=True),
+        ]
+        self.update_sensing_node(nodes)
 
-    def simulation_mode_disabled(self):
-        self.rosbag_mode_proc.start("rosparam set /use_sim_time false")
-        self.rosbag_stopped()
-        self.rosbag_play.setEnabled(False)
+    def exit_sensing_btn_clicked(self):
+        print('exit sensing')
 
-    def rosbag_info_requested(self):
-        self.rosbag_info_proc.start("rosbag info " + self.rosbag_file.path.text())
+        # TODO stop related nodes
+        nodes = [
+            AwNode(name='lidar', status=False),
+            AwNode(name='camera', status=False),
+            AwNode(name='camera_lidar', status=False),
+            AwNode(name='multi_lidar', status=False),
+            AwNode(name='lidar_preprocessor', status=False),
+        ]
+        self.update_sensing_node(nodes)
 
-    def rosbag_info_completed(self):
-        stdout = self.rosbag_info_proc.readAllStandardOutput().data().decode('utf-8')
-        stderr = self.rosbag_info_proc.readAllStandardError().data().decode('utf-8')
-        self.rosbag_text.setText(stdout + stderr)
+    def engage_actuation_btn_clicked(self):
+        print('engage actuation')
 
-    def rosbag_started(self):
-        xml = myutils.package("resources/rosbagplay.xml")
-        arg = self.rosbag_file.path.text()
-        self.rosbag_play_proc.start('roslaunch {} options:="{}" bagfile:={}'.format(xml, "--clock --start=0", arg))
-        self.rosbag_play_proc.processId()
-        self.rosbag_play.setEnabled(False)
-        self.rosbag_stop.setEnabled(True)
-        self.rosbag_pause.setEnabled(True)
+        # TODO run launch file
+        self.actuation_nodes = [
+            AwNode(name='autonomoustuff', status=True),
+        ]
+        self.actuation_node_list.update_node_list(self.actuation_nodes)
 
-    def rosbag_stopped(self):
-        self.rosbag_play_proc.terminate()
-        self.rosbag_finished()
-    
-    def rosbag_finished(self):
-        self.rosbag_play.setEnabled(True)
-        self.rosbag_stop.setEnabled(False)
-        self.rosbag_pause.setEnabled(False)
-        self.rosbag_pause.setChecked(False)
+    def disengage_actuation_btn_clicked(self):
+        print('disengage_actuation')
 
-    def rosbag_paused(self, checked):
-        self.rosbag_play_proc.write(" ")
+        # TODO stop related nodes
+        self.actuation_nodes = [
+            AwNode(name='autonomoustuff', status=False),
+        ]
+        self.actuation_node_list.update_node_list(self.actuation_nodes)
 
-    def rosbag_output(self):
-        #print(self.rosbag_play_proc.readAllStandardOutput().data().decode("utf-8"))
-        stdout = str(self.rosbag_play_proc.readAllStandardOutput()).split("\r")
-        if 2 <= len(stdout):
-            self.rosbag_state.setText(stdout[-2])
+    def set_sensing_profile_contents(self):
+        self.sensing_profile_pdmenu.addItems(['dummy1', 'dummy2'])
 
+    def on_sensing_profile_changed(self, text):
+        print('select sensing profile: ' + text)
+
+    def set_actuation_profile_contents(self):
+        self.actuation_profile_pdmenu.addItems(['dummy1', 'dummy2'])
+
+    def on_actuation_profile_changed(self, text):
+        print('select actuation profile: ' + text)
+
+    def update_sensing_node(self, nodes):
+        self.sensing_nodes = nodes
+        self.sensing_node_list.update_node_list(self.sensing_nodes)
+
+    def update_actuation_node(self, nodes):
+        self.actuation_nodes = nodes
+        self.actuation_node_list.update_node_list(self.actuation_nodes)

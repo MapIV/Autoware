@@ -8,9 +8,9 @@ from ..plugins.basic import AwToggleSwitch
 
 class AwToggleLoggingWidget(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwToggleLoggingWidget, self).__init__()
-        self.states = ["Launch", "Terminate"]
+        self.context = context
 
         layout = QtWidgets.QVBoxLayout()
 

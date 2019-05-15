@@ -6,8 +6,9 @@ from PyQt5 import QtWidgets
 
 class AwOpenRvizWidget(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwOpenRvizWidget, self).__init__()
+        self.context = context
 
         self.button = QtWidgets.QPushButton('Open Rviz', self)
         self.button.clicked.connect(self.onclicked)

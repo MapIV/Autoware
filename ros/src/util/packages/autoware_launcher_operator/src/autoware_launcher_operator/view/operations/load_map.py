@@ -6,8 +6,9 @@ from PyQt5 import QtWidgets
 
 class AwLoadMapWidget(QtWidgets.QWidget):
 
-    def __init__(self, guimgr):
+    def __init__(self, context):
         super(AwLoadMapWidget, self).__init__()
+        self.context = context
 
         # load map button
         self.load_button = QtWidgets.QPushButton('Load Map')
