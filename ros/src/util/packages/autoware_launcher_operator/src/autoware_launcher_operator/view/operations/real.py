@@ -50,7 +50,7 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         sub_layout1.addWidget(self.exit_sensing_btn)
         layout.addLayout(sub_layout1)
         layout.addWidget(self.sensing_node_list)
-        layout.addWidget(QHLine())
+        layout.addWidget(QHLine)
         layout.addWidget(self.actuation_profile_pdmenu)
         sub_layout2 = QtWidgets.QHBoxLayout()
         sub_layout2.addWidget(self.engage_actuation_btn)
