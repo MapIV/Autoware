@@ -3,6 +3,7 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
+from ..plugins.basic import AwLabeledLineEdit
 
 # TODO
 class AwRosbagSimulatorWidget(QtWidgets.QWidget):
@@ -11,116 +12,88 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         super(AwRosbagSimulatorWidget, self).__init__()
         self.context = context
 
+        self.rate = 0
+        self.offset = 0
+
         # button
-        # self.real_button = QtWidgets.QPushButton('REAL')
-        # self.real_button.clicked.connect(self.select_real_mode)
-        # self.rosbag_button = QtWidgets.QPushButton('ROSBAG')
-        # self.rosbag_button.clicked.connect(self.select_rosbag_mode)
-        self.sim_button = QtWidgets.QPushButton('SIM')
-        # self.sim_button.clicked.connect(self.select_sim_mode)
+        self.open_rosbag_btn = QtWidgets.QPushButton('Open Rosbag')
+        self.open_rosbag_btn.clicked.connect(self.open_rosbag_btn_clicked)
+        self.play_btn = QtWidgets.QPushButton('Play')
+        self.play_btn.clicked.connect(self.play_btn_clicked)
+        self.stop_btn = QtWidgets.QPushButton('Stop')
+        self.stop_btn.clicked.connect(self.stop_btn_clicked)
+        self.pause_btn = QtWidgets.QPushButton('Pause')
+        self.pause_btn.clicked.connect(self.pause_btn_clicked)
+
+        # text area
+        self.textarea = QtWidgets.QPlainTextEdit()
+        self.textarea.setReadOnly(True)
+        self.set_text('rosbag info here')
+
+        # line edit
+        self.rate_lineedit = AwLabeledLineEdit('Rate', '(x)')
+        self.rate_lineedit.textChanged.connect(self.rate_changed)
+        self.rate_lineedit.set_text(self.rate)
+        self.offset_lineedit = AwLabeledLineEdit('Offset', '(s)')
+        self.offset_lineedit.textChanged.connect(self.offset_changed)
+        self.offset_lineedit.set_text(self.offset)
+
+        # progress bar
+        self.pbar = QtWidgets.QProgressBar()
+
+        # check box
+        self.checkbox = QtWidgets.QCheckBox('Repeat')
+        self.checkbox.stateChanged.connect(self.update_repeat_status)
 
         # set layout
         layout = QtWidgets.QVBoxLayout()
-        # layout.addWidget(self.real_button)
-        # layout.addWidget(self.rosbag_button)
-        layout.addWidget(self.sim_button)
+        layout.addWidget(self.open_rosbag_btn)
+        layout.addWidget(self.textarea)
+        sub_layout1 = QtWidgets.QHBoxLayout()
+        sub_layout1.addWidget(self.rate_lineedit)
+        sub_layout1.addWidget(self.offset_lineedit)
+        layout.addLayout(sub_layout1)
+        sub_layout2 = QtWidgets.QHBoxLayout()
+        sub_layout2.addWidget(self.play_btn)
+        sub_layout2.addWidget(self.stop_btn)
+        sub_layout2.addWidget(self.pause_btn)
+        layout.addLayout(sub_layout2)
+        layout.addWidget(self.pbar)
+        layout.addWidget(self.checkbox)
         self.setLayout(layout)
 
+    def open_rosbag_btn_clicked(self):
+        print('open rosbag')
 
-        # self.rosbag_mode_proc = QtCore.QProcess(self)
-        # self.rosbag_info_proc = QtCore.QProcess(self)
-        # self.rosbag_play_proc = QtCore.QProcess(self)
+    def play_btn_clicked(self):
+        print('play rosbag')
+        print('rate: {}, offset: {}'.format(self.rate, self.offset))
 
-        # self.rosbag_file   = widgets.AwFileSelect(self)
-        # self.rosbag_info   = QtWidgets.QPushButton("Info")
-        # self.rosbag_text   = QtWidgets.QLabel("No information")
-        # self.rosbag_enable = QtWidgets.QCheckBox()
-        # self.rosbag_label  = QtWidgets.QLabel("Simulation Mode")
-        # self.rosbag_play   = QtWidgets.QPushButton("Play")
-        # self.rosbag_stop   = QtWidgets.QPushButton("Stop")
-        # self.rosbag_pause  = QtWidgets.QPushButton("Pause")
-        # self.rosbag_state  = QtWidgets.QLabel()
-        # #self.rosbag_stime  = QtWidgets.QLineEdit()
-        # #start time
-        # #repeat
-        # #rate
+    def stop_btn_clicked(self):
+        print('stop rosbag')
 
-        # self.rosbag_enable.stateChanged.connect(self.simulation_mode_changed)
-        # self.rosbag_info.clicked.connect(self.rosbag_info_requested)
-        # self.rosbag_info_proc.finished.connect(self.rosbag_info_completed)
+    def pause_btn_clicked(self):
+        print('pause rosbag')
 
-        # self.rosbag_play.clicked.connect(self.rosbag_started)
-        # self.rosbag_stop.clicked.connect(self.rosbag_stopped)
-        # self.rosbag_play_proc.finished.connect(self.rosbag_finished)
-        # self.rosbag_play_proc.readyReadStandardOutput.connect(self.rosbag_output)
+    def set_text(self, txt):
+        self.textarea.setPlainText(txt)
 
-        # self.rosbag_pause.setCheckable(True)
-        # self.rosbag_pause.toggled.connect(self.rosbag_paused)
+    def set_progress(self, val):
+        # val: 0 to 100
+        self.pbar.setValue(val)
 
-        # self.setStyleSheet("QCheckBox::indicator { width: 28px; height: 28px; }")
-        # self.rosbag_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
-        # self.rosbag_text.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
-        
-        # layout = QtWidgets.QGridLayout()
-        # layout.addWidget(self.rosbag_enable,      0, 0)
-        # layout.addWidget(self.rosbag_label,       0, 1)
-        # layout.addWidget(self.rosbag_play,        0, 2)
-        # layout.addWidget(self.rosbag_stop,        0, 3)
-        # layout.addWidget(self.rosbag_pause,       0, 4)
-        # layout.addWidget(self.rosbag_state,       1, 0, 1, 5)
-        # layout.addWidget(self.rosbag_file.path,   2, 0, 1, 3)
-        # layout.addWidget(self.rosbag_file.button, 2, 3)
-        # layout.addWidget(self.rosbag_info,        2, 4)
-        # layout.addWidget(self.rosbag_text,        3, 0, 1, 5)
-        # self.setLayout(layout)
-        # self.simulation_mode_disabled()
+    def update_repeat_status(self, state):
+        if state or state == QtCore.Qt.Checked:
+            self.repeat_rosbag = True
+            print('repeat on')
+        else:
+            self.repeat_rosbag = False
+            print('repeat off')
 
-    # def simulation_mode_changed(self, state):
-    #     if state == QtCore.Qt.Checked:   self.simulation_mode_enabled()
-    #     if state == QtCore.Qt.Unchecked: self.simulation_mode_disabled()
+    def rate_changed(self, val):
+        print('rate change to ' + val)
+        self.rate = val
 
-    # def simulation_mode_enabled(self):
-    #     self.rosbag_mode_proc.start("rosparam set /use_sim_time true")
-    #     self.rosbag_stopped()
-
-    # def simulation_mode_disabled(self):
-    #     self.rosbag_mode_proc.start("rosparam set /use_sim_time false")
-    #     self.rosbag_stopped()
-    #     self.rosbag_play.setEnabled(False)
-
-    # def rosbag_info_requested(self):
-    #     self.rosbag_info_proc.start("rosbag info " + self.rosbag_file.path.text())
-
-    # def rosbag_info_completed(self):
-    #     stdout = self.rosbag_info_proc.readAllStandardOutput().data().decode('utf-8')
-    #     stderr = self.rosbag_info_proc.readAllStandardError().data().decode('utf-8')
-    #     self.rosbag_text.setText(stdout + stderr)
-
-    # def rosbag_started(self):
-    #     xml = myutils.package("resources/rosbagplay.xml")
-    #     arg = self.rosbag_file.path.text()
-    #     self.rosbag_play_proc.start('roslaunch {} options:="{}" bagfile:={}'.format(xml, "--clock --start=0", arg))
-    #     self.rosbag_play_proc.processId()
-    #     self.rosbag_play.setEnabled(False)
-    #     self.rosbag_stop.setEnabled(True)
-    #     self.rosbag_pause.setEnabled(True)
-
-    # def rosbag_stopped(self):
-    #     self.rosbag_play_proc.terminate()
-    #     self.rosbag_finished()
-    
-    # def rosbag_finished(self):
-    #     self.rosbag_play.setEnabled(True)
-    #     self.rosbag_stop.setEnabled(False)
-    #     self.rosbag_pause.setEnabled(False)
-    #     self.rosbag_pause.setChecked(False)
-
-    # def rosbag_paused(self, checked):
-    #     self.rosbag_play_proc.write(" ")
-
-    # def rosbag_output(self):
-    #     #print(self.rosbag_play_proc.readAllStandardOutput().data().decode("utf-8"))
-    #     stdout = str(self.rosbag_play_proc.readAllStandardOutput()).split("\r")
-    #     if 2 <= len(stdout):
-    #         self.rosbag_state.setText(stdout[-2])
-
+    def offset_changed(self, val):
+        print('offset change to ' + val)
+        self.offset = val

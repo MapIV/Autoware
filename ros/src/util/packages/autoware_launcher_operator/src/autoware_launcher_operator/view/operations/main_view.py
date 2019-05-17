@@ -35,4 +35,12 @@ class AwMainViewWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.tabs)
         self.setLayout(layout)
-        
+
+    def select_real(self):
+        self.tabs.setCurrentWidget(self.real_tab)
+
+    def select_rosbag(self):
+        self.tabs.setCurrentWidget(self.rosbag_tab)
+
+    def select_sim(self):
+        self.tabs.setCurrentWidget(self.sim_tab)

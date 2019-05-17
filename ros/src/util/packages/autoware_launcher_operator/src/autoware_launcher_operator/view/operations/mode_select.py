@@ -25,11 +25,28 @@ class AwModeSelectWidget(QtWidgets.QWidget):
         layout.addWidget(self.sim_button)
         self.setLayout(layout)
 
+        # callback
+        self.select_real_mode_callback = None
+        self.select_rosbag_mode_callback = None
+        self.select_sim_mode_callback = None
+
+    def set_select_real_mode_callback(self, f):
+        self.select_real_mode_callback = f
+
+    def set_select_rosbag_mode_callback(self, f):
+        self.select_rosbag_mode_callback = f
+
+    def set_select_sim_mode_callback(self, f):
+        self.select_sim_mode_callback = f
+
     def select_real_mode(self):
-        print('select real mode')
+        if self.select_real_mode_callback is not None:
+            self.select_real_mode_callback()
 
     def select_rosbag_mode(self):
-        print('select rosbag mode')
+        if self.select_rosbag_mode_callback is not None:
+            self.select_rosbag_mode_callback()
 
     def select_sim_mode(self):
-        print('select sim mode')
+        if self.select_sim_mode_callback is not None:
+            self.select_sim_mode_callback()

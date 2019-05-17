@@ -26,10 +26,11 @@ class AwLoadMapProfileWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def set_pdMenu_contents(self):
-        self.pdMenu.addItems(['dummy1', 'dummy2'])
+        self.pdMenu.addItems(self.context.map_profile_list)
 
     def on_file_selected(self, text):
         print('select map profile: ' + text)
+        self.context.set_map_profile(text)
 
     def create_profile(self):
         print('create map profile')

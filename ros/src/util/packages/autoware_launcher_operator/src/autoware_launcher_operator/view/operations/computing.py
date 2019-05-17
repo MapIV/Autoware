@@ -32,7 +32,7 @@ class AwComputingWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def on_run_clicked(self):
-        print('on run computing clicked')
+        print('run ' + self.context.computing_profile)
 
         # TODO run launch file
         self.nodes = [

@@ -26,10 +26,11 @@ class AwLoadComputingProfileWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def set_pdMenu_contents(self):
-        self.pdMenu.addItems(['dummy1', 'dummy2'])
+        self.pdMenu.addItems(self.context.computing_profile_list)
 
     def on_file_selected(self, text):
         print('select computing profile: ' + text)
+        self.context.set_computing_profile(text)
 
     def create_profile(self):
         print('create computing profile')

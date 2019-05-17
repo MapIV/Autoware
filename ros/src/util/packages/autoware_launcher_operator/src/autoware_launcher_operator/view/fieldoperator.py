@@ -18,6 +18,8 @@ from .operations import AwOpenRvizWidget
 from .operations import AwToggleLoggingWidget
 from .operations import AwToggleGatewayWidget
 
+from ..context import Context
+
 
 class AwFieldOperatorPanel(QtWidgets.QWidget):
 
@@ -43,8 +45,10 @@ class AwFieldOperatorPanel(QtWidgets.QWidget):
         self.logging = AwToggleLoggingWidget(self.context)
         self.gateway = AwToggleGatewayWidget(self.context)
 
-        # self.set_style("background-color:red;")
-        # self.set_style("#baseWidget {border:2px solid black;}")
+        # connect widgets
+        self.mode_select.set_select_real_mode_callback(self.main_view.select_real)
+        self.mode_select.set_select_rosbag_mode_callback(self.main_view.select_rosbag)
+        self.mode_select.set_select_sim_mode_callback(self.main_view.select_sim)
 
         # layout.addWidget(self.awlogo,                  0, 0,  2,  4)
         layout.addWidget(self.mode_select,    2, 0, 11,  4)
@@ -58,6 +62,8 @@ class AwFieldOperatorPanel(QtWidgets.QWidget):
         layout.addWidget(self.gateway,                 14, 10,  2, 2)
 
         self.setLayout(layout)
+        # self.set_style("background-color:red;")
+        # self.set_style("#baseWidget {border:2px solid black;}")
 
     def set_style(self, style_str):
         self.main_view.setStyleSheet(style_str)
@@ -74,6 +80,6 @@ class AwFieldOperatorPanel(QtWidgets.QWidget):
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    w = AwFieldOperatorPanel('dummy context')
+    w = AwFieldOperatorPanel(Context())
     w.show()
     sys.exit(app.exec_())

@@ -13,11 +13,6 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         super(AwRealSensorWidget, self).__init__()
         self.context = context
 
-        #  nodes
-        # self.sensing_node_labels_layout = QtWidgets.QVBoxLayout()
-        # self.load_sensing_profile()
-        # self.update_sensing_node_labels_layout()
-
         # button
         self.run_sensing_btn = QtWidgets.QPushButton('Run Sensing')
         self.run_sensing_btn.clicked.connect(self.run_sensing_btn_clicked)
@@ -50,7 +45,7 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         sub_layout1.addWidget(self.exit_sensing_btn)
         layout.addLayout(sub_layout1)
         layout.addWidget(self.sensing_node_list)
-        layout.addWidget(QHLine)
+        layout.addWidget(QHLine())
         layout.addWidget(self.actuation_profile_pdmenu)
         sub_layout2 = QtWidgets.QHBoxLayout()
         sub_layout2.addWidget(self.engage_actuation_btn)

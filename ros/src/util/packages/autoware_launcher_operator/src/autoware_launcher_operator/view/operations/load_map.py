@@ -40,7 +40,7 @@ class AwLoadMapWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def on_load_clicked(self):
-        print('on load map clicked')
+        print('load ' + self.context.map_profile)
         self.set_progress(100)
 
     def on_unload_clicked(self):
