@@ -68,7 +68,7 @@ class AwLaunchServer(AwLaunchServerIF):
 
     def list_node(self):
         logger.debug("list_node: ")
-        return map(lambda node: node.nodepath(), self.__profile.listnode(False))
+        return map(lambda node: node.path, self.__profile.listnode(False))
 
     def find_node(self, lpath):
         logger.debug("find_node: " + lpath)
@@ -94,11 +94,11 @@ class AwLaunchServer(AwLaunchServerIF):
         difflist = []
         execlist = []
         nodelist = self.__profile.find(lpath).listnode(True)
-        nodelist = sorted(nodelist, reverse = True, key = lambda x: len(x.nodepath()))
+        nodelist = sorted(nodelist, reverse = True, key = lambda x: len(x.path))
         for node in nodelist:
             isdiff, isexec = node.launch(xmode)
-            if isdiff: difflist.append(node.nodepath())
-            if isexec: execlist.append(node.nodepath())
+            if isdiff: difflist.append(node.path)
+            if isexec: execlist.append(node.path)
         logger.debug("Update:" + str(difflist))
         logger.debug("Launch:" + str(execlist))
         for lpath in difflist:

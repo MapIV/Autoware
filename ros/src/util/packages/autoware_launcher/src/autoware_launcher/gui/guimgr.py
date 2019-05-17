@@ -36,14 +36,14 @@ class AwQtGuiManager(object):
         return widget(self, node, view)
 
     def create_frame(self, mirror, guikey = None, guicls = None):
-        #logger.debug("Create Frame: {:<7} Key: {} Class: {}".format(mirror.nodename(), guikey, guicls))
+        #logger.debug("Create Frame: {:<7} Key: {} Class: {}".format(mirror.name, guikey, guicls))
         if not guicls:
             guikey = guikey or mirror.plugin().frame()
             guicls = self.__widgets[guikey + "_frame"]
         return guicls(self, mirror)
 
     def create_panel(self, mirror, guikey = None, guicls = None):
-        #logger.debug(reate Panel: {:<7} Key: {} Class: {}".format(mirror.nodename(), guikey, guicls))
+        #logger.debug(reate Panel: {:<7} Key: {} Class: {}".format(mirror.name, guikey, guicls))
         if not guicls:
             guikey = guikey or mirror.plugin().panel()
             guicls = self.__widgets[guikey + "_panel"]

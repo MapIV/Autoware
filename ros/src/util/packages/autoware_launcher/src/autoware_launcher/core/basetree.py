@@ -25,11 +25,14 @@ class AwBaseNode(object):
         self.__tree = tree
         self.__path = path
 
+    @property
     def tree(self):
         return self.__tree
 
+    @property
     def path(self):
         return self.__path
 
+    @property
     def name(self):
         return os.path.basename(self.__path)

@@ -28,7 +28,7 @@ class AwProcessPanel(QtWidgets.QStackedWidget):
         pass
 
     def node_ui_created(self, lnode):
-        lpath = lnode.path()
+        lpath = lnode.path
         if lnode.plugin().isleaf():
             item = AwProcessItem(lpath)
             self.__items[lpath] = item
@@ -62,7 +62,7 @@ class AwProcessItem(QtWidgets.QPlainTextEdit):
     def __init__(self, lpath):
         super(AwProcessItem, self).__init__()
         self.lpath = lpath
-        
+
         #ToDo: setMaximumBlockCount
         self.setReadOnly(True)
         self.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)

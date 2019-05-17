@@ -21,32 +21,29 @@ class AwBaseNode(object):
         print((indent * " ") + str(self))
         for child in self.children(): child.dump(indent + 2)
 
+    @property
     def tree(self):
-        return self.__parent.tree()
+        return self.__parent.tree
 
-    def nodename(self): # ToDo: remove
-        return self.__nodename
-    
+    @property
     def name(self):
         return self.__nodename
 
-    def nodepath(self): # ToDo: remove
-        return os.path.join(self.__parent.nodepath(), self.nodename())
-
+    @property
     def path(self):
-        return os.path.join(self.__parent.path(), self.name())
+        return os.path.join(self.__parent.path, self.name)
 
     def fullpath(self):
-        return os.path.join(self.__parent.fullpath(), self.nodename())
+        return os.path.join(self.__parent.fullpath(), self.name)
 
     def children(self): # ToDo: remove
         return self.__children
-    
+
     def childnodes(self):
         return self.__children
 
     def childnames(self):
-        return [node.nodename() for node in self.__children]
+        return [node.name for node in self.__children]
 
     def getchild(self, name):
         return self.__childmap.get(name)
@@ -56,12 +53,12 @@ class AwBaseNode(object):
 
     def addchild(self, node):
         self.__children.append(node)
-        self.__childmap[node.nodename()] = node
+        self.__childmap[node.name] = node
         node.__parent = self
 
     def delchild(self, node):
         self.__children.remove(node)
-        self.__childmap.pop(node.nodename())
+        self.__childmap.pop(node.name)
         node.__parent = None
 
     def listnode(self, this = False):
@@ -77,15 +74,14 @@ class AwBaseTree(AwBaseNode):
         super(AwBaseTree, self).__init__(None)
         self.treepath = ""
 
+    @property
     def tree(self):
         return self
 
-    def nodepath(self): # ToDo: remove
-        return ""
-
+    @property
     def path(self):
         return ""
-    
+
     def fullpath(self):
         return self.treepath
 
@@ -106,8 +102,8 @@ class AwLaunchTree(AwBaseTree):
         #self.treedir = None
 
     def __str__(self):
-        childnames = map(lambda child: child.nodename(), self.children())
-        return "Tree:{} Children:{}".format(self.nodename(), childnames)
+        childnames = map(lambda child: child.name, self.children())
+        return "Tree:{} Children:{}".format(self.name, childnames)
 
     def save(self, treepath):
         self.treepath = treepath
@@ -137,11 +133,11 @@ class AwLaunchTree(AwBaseTree):
         launch.plugin = plugin
         launch.config = plugin.default_config()
         self.addchild(launch)
-    
+
     def export(self, rootpath):
         for node in self.listnode():
             xtext = node.generate_launch()
-            xpath = node.nodepath().replace("/", "-") + ".xml"
+            xpath = node.path.replace("/", "-") + ".xml"
             xpath = os.path.join(rootpath, xpath)
             with open(xpath, mode="w") as fp: fp.write(xtext)
 
@@ -181,7 +177,7 @@ class AwLaunchNode(AwBaseNode):
         {
             "plugin"  : self.plugin.todict(),
             "config"  : self.config,
-            "children": [child.nodename() for child in self.children()]
+            "children": [child.name for child in self.children()]
         }
 
     # experimental
@@ -249,7 +245,7 @@ class AwLaunchNode(AwBaseNode):
         else:
             lines.append('<launch>')
             for childname in self.childnames():
-                childpath = os.path.join(self.path(), childname)
+                childpath = os.path.join(self.path, childname)
                 childpath = childpath.replace("/", "-") + ".xml"
                 lines.append('  <include file="{}"/>'.format(childpath))
             lines.append('</launch>')
@@ -267,8 +263,8 @@ class AwLaunchNode(AwBaseNode):
                 self.addchild(AwLaunchNode(childname))
 
     def export_data(self):
-        children = map(lambda node: node.nodename(), self.children())
-        plugin = self.plugin.path()
+        children = map(lambda node: node.name, self.children())
+        plugin = self.plugin.path
         config = self.config
         return { "children": children, "plugin": plugin, "config": config }
 
