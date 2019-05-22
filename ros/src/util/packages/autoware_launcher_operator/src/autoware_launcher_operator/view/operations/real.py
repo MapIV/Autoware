@@ -6,7 +6,6 @@ from PyQt5 import QtWidgets
 from ..plugins.basic import AwNodeListWidget, AwNode, QHLine
 
 
-# TODO
 class AwRealSensorWidget(QtWidgets.QWidget):
 
     def __init__(self, context):

@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 
 from ..plugins.basic import AwLabeledLineEdit
 
-# TODO
+
 class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
     def __init__(self, context):

@@ -4,7 +4,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 
-# TODO
 class AwSimulationWidget(QtWidgets.QWidget):
 
     def __init__(self, context):
