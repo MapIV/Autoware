@@ -14,7 +14,7 @@ if(CATKIN_ENABLE_TESTING)
 endif()
 
 catkin_install_python(
-  PROGRAMS scripts/main scripts/tool
+  PROGRAMS scripts/main scripts/tool scripts/operator
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
