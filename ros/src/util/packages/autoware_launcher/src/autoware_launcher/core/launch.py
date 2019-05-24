@@ -107,12 +107,13 @@ class AwLaunchTree(AwBaseTree):
 
     def save(self, treepath):
         self.treepath = treepath
+        myutils.makedirs(treepath, exist_ok=True)
         with open(treepath + ".launch", mode = "w") as fp:
             fp.write("dummy")
         for node in self.listnode():
-            fullpath = node.fullpath() + ".yaml"
-            myutils.makedirs(os.path.dirname(fullpath), exist_ok = True)
-            with open(fullpath, mode = "w") as fp:
+            fullpath = os.path.join(treepath, node.path.replace("/", "-") + ".yaml")
+            print fullpath
+            with open(fullpath, mode="w") as fp:
                 fp.write(yaml.safe_dump(node.export_data(), default_flow_style = False))
 
     def load(self, treepath, plugins):

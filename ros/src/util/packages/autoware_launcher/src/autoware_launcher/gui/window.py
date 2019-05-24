@@ -50,6 +50,7 @@ class AwMainWindow(AwAbstructWindow):
         save_action = QtWidgets.QAction("Save Profile", self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_profile)
+        save_action.setEnabled(False)
 
         save_as_action = QtWidgets.QAction("Save Profile As", self)
         save_as_action.setShortcut("Ctrl+A")
@@ -88,7 +89,7 @@ class AwMainWindow(AwAbstructWindow):
             if filetype != ".launch":
                 filename = filename + filetype
             self.client.save_profile(filename)
-    
+
     def export_profile(self):
         import os
         dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Export Profile", myutils.package("launch"))

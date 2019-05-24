@@ -1,6 +1,4 @@
 import os
-import yaml
-
 
 
 class AwBaseTree(object):
