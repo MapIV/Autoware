@@ -4,12 +4,11 @@ logger = getLogger(__name__)
 import os
 import yaml
 
-from . import basetree
-from . import myutils
+from autoware_launcher.core import basetree
+from autoware_launcher.core import myutils
 
 
-
-class AwPluginTree(basetree.AwBaseTree):
+class AwPluginTree(basetree.AwFlatTree):
 
     def __init__(self):
         super(AwPluginTree, self).__init__()
@@ -28,8 +27,7 @@ class AwPluginTree(basetree.AwBaseTree):
             plugin.load(myutils.plugins())
 
 
-
-class AwPluginNode(basetree.AwBaseNode):
+class AwPluginNode(basetree.AwFlatNode):
 
     def __init__(self, tree, path):
         super(AwPluginNode, self).__init__(tree, path)
