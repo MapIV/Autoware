@@ -42,10 +42,12 @@ class AwLoadMapWidget(QtWidgets.QWidget):
     def on_load_clicked(self):
         print('load ' + self.context.map_profile)
         self.set_progress(100)
+        self.context.server.launch_node("root/map", True)
 
     def on_unload_clicked(self):
         print('on unload map clicked')
         self.set_progress(0)
+        self.context.server.launch_node("root/map", False)
 
     def on_cancel_clicked(self):
         print('on load map cancel clicked')

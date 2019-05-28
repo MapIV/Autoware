@@ -5,9 +5,16 @@ from autoware_launcher.gui_operator.context import Context
 from PyQt5 import QtWidgets
 
 import sys
+import argparse
+import logging
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", dest="verbose", action="store_true")
+args = parser.parse_args()
+loglevel = logging.INFO if not args.verbose else logging.DEBUG
+logging.basicConfig(level=loglevel, format="%(levelname)-5s: %(name)s: %(message)s")
 
 app = QtWidgets.QApplication(sys.argv)
 w = AwFieldOperatorPanel(Context())
 w.show()
 sys.exit(app.exec_())
-

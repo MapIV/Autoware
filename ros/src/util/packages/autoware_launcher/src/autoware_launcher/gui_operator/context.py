@@ -1,7 +1,15 @@
+from autoware_launcher.core import AwLaunchServer
+from autoware_launcher.core import myutils
+import os
 
 class Context(object):
+
     def __init__(self):
-        self.map_profile_list = ['dummy_mp1', 'dummy_mp2']
+        self.server = AwLaunchServer()
+        self.server.load_profile("operator/common")
+
+        path = myutils.profile("operator/maps")
+        self.map_profile_list = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
         self.map_profile = self.map_profile_list[0]
 
         self.computing_profile_list = ['dummy_cp1', 'dummy_cp2']

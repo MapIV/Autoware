@@ -15,4 +15,4 @@ class AwOpenRvizWidget(QtWidgets.QWidget):
 
     def onclicked(self):
         print('open rviz')
-
+        self.context.server.launch_node("root/visualization", True)

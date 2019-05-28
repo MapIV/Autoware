@@ -1,0 +1,4 @@
+children:
+- visualization
+config: {}
+plugin: root/default
