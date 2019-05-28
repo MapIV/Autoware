@@ -1,11 +1,12 @@
-from logging import getLogger
-logger = getLogger(__name__)
+from autoware_launcher.core import myutils
+from autoware_launcher.core.plugin import AwPluginTree
+from autoware_launcher.core.launch import AwLaunchTree
+from autoware_launcher.core.launch import AwLaunchNode
+from autoware_launcher.core.process import AwProcessManager
 
+import logging
 import yaml
-from .       import myutils
-from .plugin import AwPluginTree
-from .launch import AwLaunchTree
-from .launch import AwLaunchNode
+logger = logging.getLogger(__name__)
 
 
 class AwLaunchServerIF(object):
@@ -20,9 +21,10 @@ class AwLaunchServerIF(object):
     def launch_node (self, lpath):        raise NotImplementedError("launch_node")
     #def list_plugin
     #def find_plugin
-    #def runner_finished
-    #def runner_stdouted
-    #def runner_stderred
+    #def process_finished
+    #def process_stdouted
+    #def process_stderred
+
 
 class AwLaunchClientIF(object):
     def profile_updated(self):               logger.debug("Not implemented: profile_updated in " + self.__class__.__name__)
@@ -34,14 +36,15 @@ class AwLaunchClientIF(object):
 
 class AwLaunchServer(AwLaunchServerIF):
 
-    def __init__(self, sysarg):
+    def __init__(self, sysarg=None):
         self.__plugins = AwPluginTree()
         self.__profile = AwLaunchTree(self, self.__plugins)
-        self.__runner  = None
         self.__clients = []
+        self.__process  = AwProcessManager()
+        self.__process.register_server(self)
 
     def register_runner(self, runner):
-        self.__runner = runner
+        self.__process = runner
 
     def register_client(self, client):
         self.__clients.append(client)
@@ -57,6 +60,10 @@ class AwLaunchServer(AwLaunchServerIF):
         self.__profile = AwLaunchTree(self, self.__plugins)
         self.__profile.load(myutils.profile(fpath))
         for client in self.__clients: client.profile_updated()
+
+    def load_profile_subtree(self, basepath, nodepath):
+        logger.debug("load_profile_subtree: " + nodepath)
+        self.__profile.load_subtree(basepath, nodepath)
 
     def save_profile(self, fpath):
         logger.debug("save_profile: " + fpath)
@@ -107,9 +114,9 @@ class AwLaunchServer(AwLaunchServerIF):
         for lpath in execlist:
             if xmode:
                 xtext = self.__profile.find(lpath).generate_launch()
-                self.__runner.roslaunch(lpath, xtext)
+                self.__process.roslaunch(lpath, xtext)
             else:
-                self.__runner.terminate(lpath)
+                self.__process.terminate(lpath)
 
     def runner_finished(self, lpath): # ToDo: update ancestors status
         self.__profile.find(lpath).status = AwLaunchNode.STOP

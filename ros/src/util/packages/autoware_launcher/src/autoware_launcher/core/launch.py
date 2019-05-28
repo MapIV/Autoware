@@ -16,7 +16,7 @@ class AwLaunchTree(basetree.AwBaseTree):
         self.plugins = plugins
 
     def __str__(self):
-        return "Tree:{} Children:{}".format(self.name, len(self.children()))
+        return "Node:{} Base:{} Children:{}".format(self.name, self.basepath(), len(self.children()))
 
     def save(self, basepath):
         self._AwBaseNode__basepath = basepath
@@ -29,7 +29,7 @@ class AwLaunchTree(basetree.AwBaseTree):
                 fp.write(yaml.safe_dump(node.export_data(), default_flow_style = False))
 
     def load(self, basepath):
-        self._AwBaseNode__basepath = basepath
+        self._AwBaseNode__basepath = myutils.profile(basepath)
         def load_node(node, plugins):
             fullpath = node.fullpath()
             with open(fullpath + ".yaml") as fp:
@@ -53,7 +53,7 @@ class AwLaunchTree(basetree.AwBaseTree):
         target = self.find(nodepath)
         if target:
             parent.delchild(target)
-        target = AwLaunchNode(os.path.basename(nodepath))
+        target = AwLaunchNode(os.path.basename(nodepath), myutils.profile(basepath))
         parent.addchild(target)
         load_node(target, self.plugins)
 
@@ -91,15 +91,14 @@ class AwLaunchNode(basetree.AwBaseNode):
 
     STOP, EXEC, TERM = 0x00, 0x01, 0x02
 
-    def __init__(self, name):
-        super(AwLaunchNode, self).__init__(name)
+    def __init__(self, name, base=None):
+        super(AwLaunchNode, self).__init__(name, base)
         self.plugin = None
         self.config = None
         self.status = self.STOP
 
     def __str__(self):
-        return "Node:{} Children:{}".format(self.name, len(self.children()))
-
+        return "Node:{} Base:{} Children:{}".format(self.name, self.basepath(), len(self.children()))
 
     def tostring(self):
         return yaml.safe_dump(self.todict())

@@ -38,7 +38,7 @@ class AwFlatTree(object):
 
 class AwBaseNode(object):
 
-    def __init__(self, name, base=None):
+    def __init__(self, name, base):
         self.__basepath = base
         self.__nodename = name
         self.__parent   = None
@@ -101,7 +101,7 @@ class AwBaseNode(object):
 class AwBaseTree(AwBaseNode):
 
     def __init__(self):
-        super(AwBaseTree, self).__init__(None)
+        super(AwBaseTree, self).__init__(None, None)
 
     @property
     def tree(self):
