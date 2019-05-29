@@ -4,114 +4,23 @@ logger = getLogger(__name__)
 import os
 import yaml
 
-from . import basetree
-from . import myutils
+from autoware_launcher.core import basetree
+from autoware_launcher.core import myutils
 
 
-
-class AwBaseNode(object):
-
-    def __init__(self, name):
-        self.__nodename = name
-        self.__parent   = None
-        self.__children = []
-        self.__childmap = {}
-
-    def dump(self, indent = 0):
-        print((indent * " ") + str(self))
-        for child in self.children(): child.dump(indent + 2)
-
-    def tree(self):
-        return self.__parent.tree()
-
-    def nodename(self): # ToDo: remove
-        return self.__nodename
-    
-    def name(self):
-        return self.__nodename
-
-    def nodepath(self): # ToDo: remove
-        return os.path.join(self.__parent.nodepath(), self.nodename())
-
-    def path(self):
-        return os.path.join(self.__parent.path(), self.name())
-
-    def fullpath(self):
-        return os.path.join(self.__parent.fullpath(), self.nodename())
-
-    def children(self): # ToDo: remove
-        return self.__children
-    
-    def childnodes(self):
-        return self.__children
-
-    def childnames(self):
-        return [node.nodename() for node in self.__children]
-
-    def getchild(self, name):
-        return self.__childmap.get(name)
-
-    def haschild(self, name):
-        return name in self.__childmap
-
-    def addchild(self, node):
-        self.__children.append(node)
-        self.__childmap[node.nodename()] = node
-        node.__parent = self
-
-    def delchild(self, node):
-        self.__children.remove(node)
-        self.__childmap.pop(node.nodename())
-        node.__parent = None
-
-    def listnode(self, this = False):
-        result = [self] if this else []
-        for child in self.children(): result.extend(child.listnode(True))
-        return result
-
-
-
-class AwBaseTree(AwBaseNode):
-
-    def __init__(self):
-        super(AwBaseTree, self).__init__(None)
-        self.treepath = ""
-
-    def tree(self):
-        return self
-
-    def nodepath(self): # ToDo: remove
-        return ""
-
-    def path(self):
-        return ""
-    
-    def fullpath(self):
-        return self.treepath
-
-    def find(self, path):
-        node = self
-        for name in path.split("/"):
-            node = node.getchild(name)
-        return node
-
-
-
-class AwLaunchTree(AwBaseTree):
+class AwLaunchTree(basetree.AwBaseTree):
 
     def __init__(self, server, plugins):
         super(AwLaunchTree, self).__init__()
         self.server  = server
         self.plugins = plugins
-        #self.treedir = None
 
     def __str__(self):
-        childnames = map(lambda child: child.nodename(), self.children())
-        return "Tree:{} Children:{}".format(self.nodename(), childnames)
+        return "Node:{} Base:{} Children:{}".format(self.name, self.basepath(), len(self.children()))
 
-    def save(self, treepath):
-        self.treepath = treepath
-        with open(treepath + ".launch", mode = "w") as fp:
+    def save(self, basepath):
+        self._AwBaseNode__basepath = basepath
+        with open(basepath + ".launch", mode = "w") as fp:
             fp.write("dummy")
         for node in self.listnode():
             fullpath = node.fullpath() + ".yaml"
@@ -119,17 +28,34 @@ class AwLaunchTree(AwBaseTree):
             with open(fullpath, mode = "w") as fp:
                 fp.write(yaml.safe_dump(node.export_data(), default_flow_style = False))
 
-    def load(self, treepath, plugins):
-        def load_node(node):
+    def load(self, basepath):
+        self._AwBaseNode__basepath = myutils.profile(basepath)
+        def load_node(node, plugins):
             fullpath = node.fullpath()
             with open(fullpath + ".yaml") as fp:
                 node.import_data(yaml.safe_load(fp), plugins)
             for child in node.children():
-                load_node(child)
+                load_node(child, plugins)
         root = AwLaunchNode("root")
         self.addchild(root)
-        self.treepath = treepath
-        load_node(root)
+        load_node(root, self.plugins)
+
+    def load_subtree(self, basepath, nodepath):
+        def load_node(node, plugins):
+            fullpath = node.fullpath()
+            with open(fullpath + ".yaml") as fp:
+                node.import_data(yaml.safe_load(fp), plugins)
+            for child in node.children():
+                load_node(child, plugins)
+        parent = self.find(os.path.dirname(nodepath))
+        if parent is None:
+            return "parent is not found"
+        target = self.find(nodepath)
+        if target:
+            parent.delchild(target)
+        target = AwLaunchNode(os.path.basename(nodepath), myutils.profile(basepath))
+        parent.addchild(target)
+        load_node(target, self.plugins)
 
     def make(self, ppath, plugins):
         plugin = plugins.find(ppath)
@@ -137,11 +63,11 @@ class AwLaunchTree(AwBaseTree):
         launch.plugin = plugin
         launch.config = plugin.default_config()
         self.addchild(launch)
-    
+
     def export(self, rootpath):
         for node in self.listnode():
             xtext = node.generate_launch()
-            xpath = node.nodepath().replace("/", "-") + ".xml"
+            xpath = node.path.replace("/", "-") + ".xml"
             xpath = os.path.join(rootpath, xpath)
             with open(xpath, mode="w") as fp: fp.write(xtext)
 
@@ -161,17 +87,18 @@ class AwLaunchTree(AwBaseTree):
         return None
 
 
-
-
-class AwLaunchNode(AwBaseNode):
+class AwLaunchNode(basetree.AwBaseNode):
 
     STOP, EXEC, TERM = 0x00, 0x01, 0x02
 
-    def __init__(self, name):
-        super(AwLaunchNode, self).__init__(name)
+    def __init__(self, name, base=None):
+        super(AwLaunchNode, self).__init__(name, base)
         self.plugin = None
         self.config = None
         self.status = self.STOP
+
+    def __str__(self):
+        return "Node:{} Base:{} Children:{}".format(self.name, self.basepath(), len(self.children()))
 
     def tostring(self):
         return yaml.safe_dump(self.todict())
@@ -181,10 +108,10 @@ class AwLaunchNode(AwBaseNode):
         {
             "plugin"  : self.plugin.todict(),
             "config"  : self.config,
-            "children": [child.nodename() for child in self.children()]
+            "children": [child.name for child in self.children()]
         }
 
-    # experimental
+    # experimental, move to tree
     def remove_child(self, name):
         if not name:
             return "name is empty"
@@ -249,13 +176,11 @@ class AwLaunchNode(AwBaseNode):
         else:
             lines.append('<launch>')
             for childname in self.childnames():
-                childpath = os.path.join(self.path(), childname)
+                childpath = os.path.join(self.path, childname)
                 childpath = childpath.replace("/", "-") + ".xml"
                 lines.append('  <include file="{}"/>'.format(childpath))
             lines.append('</launch>')
         return "\n".join(lines)
-
-
 
     def import_data(self, data, plugins):
         self.plugin = plugins.find(data["plugin"])
@@ -267,26 +192,24 @@ class AwLaunchNode(AwBaseNode):
                 self.addchild(AwLaunchNode(childname))
 
     def export_data(self):
-        children = map(lambda node: node.nodename(), self.children())
-        plugin = self.plugin.path()
+        children = map(lambda node: node.name, self.children())
+        plugin = self.plugin.path
         config = self.config
         return { "children": children, "plugin": plugin, "config": config }
 
 
-    # ToDo: remove function
-    def bind_listener(self, listener):
-        logger.warning("bind_listener: " + listener.__class__.__name__)
-
-    # ToDo: remove function
-    def unbind_listener(self, listener):
-        logger.warning("unbind_listener: " + listener.__class__.__name__)
-
-
-
 if __name__ == "__main__":
     from .plugin import AwPluginTree
+    import_path = myutils.profile("quickstart")
+    update_path = myutils.profile("quickstart")
+    export_path = myutils.profile("sample.tmp")
     plugin = AwPluginTree()
-    launch = AwLaunchTree(None)
-    launch.load(myutils.profile("default"), plugin)
+    launch = AwLaunchTree(None, plugin)
+    launch.load(import_path)
+    print "============================================================"
     launch.dump()
-    launch.save(myutils.profile("sample.bak"))
+    print "============================================================"
+    launch.load_subtree(update_path, "root/sensing/camera")
+    print "============================================================"
+    launch.dump()
+    print "============================================================"

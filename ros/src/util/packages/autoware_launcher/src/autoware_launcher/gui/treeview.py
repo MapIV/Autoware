@@ -56,7 +56,7 @@ class AwTreeViewPanel(QtWidgets.QTreeWidget):
         pass
 
     def node_ui_created(self, lnode):
-        lpath = lnode.path()
+        lpath = lnode.path
         ppath, lname = os.path.split(lpath)
         if ppath:
             item = AwTreeViewItem(lpath)

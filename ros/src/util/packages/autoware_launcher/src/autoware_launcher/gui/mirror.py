@@ -2,7 +2,7 @@ from ..core import myutils
 
 
 class AwLaunchTreeMirror(object):
-    
+
     def __init__(self, client):
         self.nodes = {}
         self.cache = {}
@@ -52,12 +52,14 @@ class AwLaunchNodeMirror(object):
     def isleaf(self):
         return self.__find().plugin.isleaf()
 
+    @property
     def path(self):
-        return self.__find().nodepath()
+        return self.__find().path
 
+    @property
     def name(self):
-        return self.__find().nodename()
-    
+        return self.__find().name
+
     def plugin(self):
         return self.__find().plugin
 
@@ -72,7 +74,7 @@ class AwLaunchNodeMirror(object):
         self.__tree.client.launch_node(self.__path, mode)
 
     def listnode(self, this):
-        return map(lambda node: node.nodepath(), self.__find().listnode(this))
+        return map(lambda node: node.path, self.__find().listnode(this))
 
     def haschild(self, name):
         return self.__find().haschild(name)
@@ -86,14 +88,14 @@ class AwLaunchNodeMirror(object):
     def children(self):
         mirrored_children = []
         for child in self.__find().children():
-            mirrored_children.append(self.__tree.create(child.nodepath()))
+            mirrored_children.append(self.__tree.create(child.path))
         return mirrored_children
 
     def childnames(self):
-        return map(lambda node: node.nodename(), self.__find().children())
+        return map(lambda node: node.name, self.__find().children())
 
     def childnodes(self):
-        return [self.__tree.create(child.nodepath()) for child in self.__find().children()]
+        return [self.__tree.create(child.path) for child in self.__find().children()]
 
     def get_config(self, key, value = None):
         return self.__find().config.get(key, value)
@@ -108,6 +110,6 @@ class AwLaunchNodeMirror(object):
 #
 #    def __init__(self, writer):
 #        self.writer = writer
-#    
+#
 #    def __getattr__(self, name):
 #        return getattr(self.writer, name)

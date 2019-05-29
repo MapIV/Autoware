@@ -24,10 +24,10 @@ class AwQuickStartPanel(QtWidgets.QWidget):
         self.guimgr.panel_setup(self, self.awlogo)
 
     def node_ui_created(self, lnode):
-        if lnode.path() == "root": self.setup_widget(lnode)
+        if lnode.path == "root": self.setup_widget(lnode)
 
     def node_ui_updated(self, lnode):
-        if lnode.path() == "root": self.setup_widget(lnode)
+        if lnode.path == "root": self.setup_widget(lnode)
 
     def status_ui_updated(self, lpath, state):
         frame = self.frames.get(lpath)
@@ -39,9 +39,9 @@ class AwQuickStartPanel(QtWidgets.QWidget):
     def setup_widget(self, node):
         self.guimgr.panel_setup(self, self.awlogo)
         for child in node.childnodes():
-            if child.path() in self.frames:
+            if child.path in self.frames:
                 frame = self.guimgr.create_widget(child, child.plugin().frame(), widget = AwLaunchFrame)
-                self.frames[child.path()] = frame
+                self.frames[child.path] = frame
                 self.guimgr.panel_add_widget(self, frame)
 
 
@@ -55,7 +55,7 @@ class AwLaunchFrame(QtWidgets.QWidget):
 
         guimgr.frame_setup(self)
 
-        self.title.setText(node.name().capitalize())
+        self.title.setText(node.name.capitalize())
         guimgr.frame_add_text_widget(self, node.get_config("exts.description", "No Description"))
 
         self.button = QtWidgets.QPushButton(self.states[0])
@@ -80,4 +80,3 @@ class AwLaunchFrame(QtWidgets.QWidget):
     def term_completed(self):
         self.button.setText(self.states[0])
         self.button.setEnabled(True)
-

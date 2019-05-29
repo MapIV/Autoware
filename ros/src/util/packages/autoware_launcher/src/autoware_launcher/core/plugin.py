@@ -4,12 +4,11 @@ logger = getLogger(__name__)
 import os
 import yaml
 
-from . import basetree
-from . import myutils
+from autoware_launcher.core import basetree
+from autoware_launcher.core import myutils
 
 
-
-class AwPluginTree(basetree.AwBaseTree):
+class AwPluginTree(basetree.AwFlatTree):
 
     def __init__(self):
         super(AwPluginTree, self).__init__()
@@ -28,8 +27,7 @@ class AwPluginTree(basetree.AwBaseTree):
             plugin.load(myutils.plugins())
 
 
-
-class AwPluginNode(basetree.AwBaseNode):
+class AwPluginNode(basetree.AwFlatNode):
 
     def __init__(self, tree, path):
         super(AwPluginNode, self).__init__(tree, path)
@@ -48,7 +46,7 @@ class AwPluginNode(basetree.AwBaseNode):
     def todict(self):
         return \
         {
-            "1.name" : self.path(),
+            "1.name" : self.path,
             "2.type" : "Node" if self.isnode() else "Leaf",
             "3.file" : self.__rosxml,
             "4.exts" : [data.todict() for data in self.__exts],
@@ -106,7 +104,7 @@ class AwPluginNode(basetree.AwBaseNode):
         return "\n".join(lines)
 
     def load(self, rootpath):
-        filepath = os.path.join(rootpath, self.path())
+        filepath = os.path.join(rootpath, self.path)
 
         with open(filepath+ ".yaml") as fp:
             ydata = yaml.safe_load(fp)
@@ -115,7 +113,7 @@ class AwPluginNode(basetree.AwBaseNode):
             raise Exception("unknown plugin format: " + filepath)
 
         self.__isleaf = ydata.get("rules") is None
-        self.__rosxml = ydata.get("rosxml", "$(find autoware_launcher)/plugins/{}.xml".format(self.path()))
+        self.__rosxml = ydata.get("rosxml", "$(find autoware_launcher)/plugins/{}.xml".format(self.path))
         self.__exts   = [AwPluginDataElement(data) for data in ydata.get("exts", [])]
         self.__args   = [AwPluginDataElement(data) for data in ydata.get("args", [])]
         self.__rules  = [AwPluginRuleElement(data, self) for data in ydata.get("rules", [])]
@@ -161,7 +159,7 @@ class AwPluginRuleElement(object):
 
     def __init_plugins(self, plist, pnode):
         plugins = []
-        ptree = pnode.tree()
+        ptree = pnode.tree
         plist = plist if type(plist) is list else [plist]
         for pdata in plist:
             if type(pdata) is dict:
@@ -170,9 +168,9 @@ class AwPluginRuleElement(object):
                 if ptree.find(pdata):
                     plugins.append(pdata)
                 else:
-                    logger.warning("plugin is not found: {} in {}".format(pdata, pnode.path()))
+                    logger.warning("plugin is not found: {} in {}".format(pdata, pnode.path))
             else:
-                logger.warning("unknown plugin rule: {} in {}".format(pdata, pnode.path()))
+                logger.warning("unknown plugin rule: {} in {}".format(pdata, pnode.path))
         return plugins
 
 class AwPluginFrameElement(object):

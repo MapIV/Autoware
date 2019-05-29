@@ -80,8 +80,8 @@ class AwDefaultNodeFrame(widgets.AwAbstructFrame):
         super(AwDefaultNodeFrame, self).__init__(guimgr, node, view)
 
         super(AwDefaultNodeFrame, self).setup_widget()
-        self.set_title(self.node.name().capitalize())
-        self.add_button(AwConfigButton(self.guimgr.client(), self.node.path()))
+        self.set_title(self.node.name.capitalize())
+        self.add_button(AwConfigButton(self.guimgr.client(), self.node.path))
 
         description = self.node.get_config("exts.description")
         if description:
@@ -203,7 +203,7 @@ class AwPluginRemoveWindow(QtWidgets.QMainWindow):
         # select
         self.nodelist = QtWidgets.QListWidget()
         for child in self.node.children():
-            self.nodelist.addItem(child.name())
+            self.nodelist.addItem(child.name)
 
         # footer
         cancel = QtWidgets.QPushButton("Cancel")

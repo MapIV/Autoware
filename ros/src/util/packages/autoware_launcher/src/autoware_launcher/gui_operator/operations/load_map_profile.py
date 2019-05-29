@@ -28,6 +28,10 @@ class AwLoadMapProfileWidget(QtWidgets.QWidget):
     def set_pdMenu_contents(self):
         self.pdMenu.addItems(self.context.map_profile_list)
 
+        # load default map
+        dirpath = "operator/maps/" + self.pdMenu.currentText()
+        self.context.server.load_profile_subtree(dirpath, "root/map")
+
     def on_file_selected(self, text):
         print('select map profile: ' + text)
         self.context.set_map_profile(text)
