@@ -2,6 +2,17 @@
 # from python_qt_binding import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
+
+
+class QImage(QtWidgets.QLabel):
+    def __init__(self, img_path, width=200, height=200):
+        super(QImage, self).__init__()
+
+        pixmap = QtGui.QPixmap(img_path)
+        pixmap = pixmap.scaled(width, height, QtCore.Qt.KeepAspectRatio)
+
+        self.setPixmap(pixmap)
 
 import time
 

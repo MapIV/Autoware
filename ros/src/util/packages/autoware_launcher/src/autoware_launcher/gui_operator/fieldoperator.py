@@ -5,7 +5,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-# from ..core import myutils
+from ..core import myutils
 # from ..core import AwLaunchClientIF
 
 from .operations import AwMainViewWidget
@@ -17,6 +17,7 @@ from .operations import AwComputingWidget
 from .operations import AwOpenRvizWidget
 from .operations import AwToggleLoggingWidget
 from .operations import AwToggleGatewayWidget
+from .plugins.basic import QImage
 
 from .context import Context
 
@@ -27,14 +28,10 @@ class AwFieldOperatorPanel(QtWidgets.QWidget):
         super(AwFieldOperatorPanel, self).__init__()
         self.context = context
 
-        # self.awlogo = QtWidgets.QLabel()
-        # pixmap = QtGui.QPixmap(myutils.package("resources/autoware_logo.png"))
-        # self.awlogo.setPixmap(pixmap)
-        # self.awlogo.setAlignment(QtCore.Qt.AlignCenter)
-        # self.awlogo.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
 
         layout = QtWidgets.QGridLayout()
 
+        self.awlogo = QImage(myutils.package("resources/autoware_logo.png"))
         self.main_view = AwMainViewWidget(self.context)
         self.mode_select = AwModeSelectWidget(self.context)
         self.load_map_profile = AwLoadMapProfileWidget(self.context)
@@ -50,7 +47,7 @@ class AwFieldOperatorPanel(QtWidgets.QWidget):
         self.mode_select.set_select_rosbag_mode_callback(self.main_view.select_rosbag)
         self.mode_select.set_select_sim_mode_callback(self.main_view.select_sim)
 
-        # layout.addWidget(self.awlogo,                  0, 0,  2,  4)
+        layout.addWidget(self.awlogo,                  0, 0,  2,  4)
         layout.addWidget(self.mode_select,    2, 0, 11,  4)
         layout.addWidget(self.load_map_profile,       13, 0,  1,  8)
         layout.addWidget(self.load_computing_profile, 14, 0,  1,  8)
