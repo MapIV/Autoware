@@ -1,4 +1,4 @@
 children:
 - visualization
 config: {}
-plugin: root/default
+plugin: root/operator
