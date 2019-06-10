@@ -3,7 +3,9 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from ..plugins.basic import AwToggleSwitch
+# from ..plugins.basic import AwToggleSwitch
+from ...core import myutils
+from ..plugins.basic import QToggleImage
 
 
 class AwToggleGatewayWidget(QtWidgets.QWidget):
@@ -17,7 +19,8 @@ class AwToggleGatewayWidget(QtWidgets.QWidget):
         self.label = QtWidgets.QLabel('Gateway')
         layout.addWidget(self.label)
 
-        self.switch = AwToggleSwitch()
+        # self.switch = AwToggleSwitch()
+        self.switch = QToggleImage(myutils.package('resources/toggle_off.png'), myutils.package('resources/toggle_on.png'))
         self.switch.switchedOn.connect(self.switchedOn)
         self.switch.switchedOff.connect(self.switchedOff)
         layout.addWidget(self.switch)

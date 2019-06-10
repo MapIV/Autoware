@@ -2,8 +2,92 @@
 # from python_qt_binding import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
 
 import time
+
+class QImage(QtWidgets.QLabel):
+    def __init__(self, img_path, width=200, height=200):
+        super(QImage, self).__init__()
+
+        pixmap = QtGui.QPixmap(img_path)
+        pixmap = pixmap.scaled(width, height, QtCore.Qt.KeepAspectRatio)
+
+        self.setPixmap(pixmap)
+
+class QImages(QtWidgets.QLabel):
+    clicked = QtCore.pyqtSignal()
+
+    def __init__(self, img_list, size=(100, 100), default=0):
+        super(QImages, self).__init__()
+
+        self.cur_i = default
+        self.pixamps = [QtGui.QPixmap(img) for img in img_list]
+
+        self.update_img()
+    
+    # This function is called when mouse is pressed
+    def mousePressEvent(self, event):
+        self.clicked.emit()
+
+    def update_img(self):
+        self.setPixmap(self.pixamps[self.cur_i])
+
+    def set_img(self, ind):
+        if ind != self.cur_i and ind < len(self.pixamps):
+            self.cur_i = ind
+            self.update_img()
+
+class QToggleImage(QtWidgets.QLabel):
+    clicked = QtCore.pyqtSignal()
+
+    switchedOn = QtCore.pyqtSignal()
+    switchedOff = QtCore.pyqtSignal()
+
+    def __init__(self, off_img, on_img, size=(120, 120), default=0):
+        super(QToggleImage, self).__init__()
+
+        # size is (width, heigh)
+        self._value = default
+        self.off_img = QtGui.QPixmap(off_img).scaled(size[0], size[1], QtCore.Qt.KeepAspectRatio)
+        self.on_img = QtGui.QPixmap(on_img).scaled(size[0], size[1], QtCore.Qt.KeepAspectRatio)
+
+        self.update_img()
+        self.clicked.connect(self.toggle)
+    
+    # This function is called when mouse is pressed
+    def mousePressEvent(self, event):
+        self.toggle()
+
+    def update_img(self):
+        if self._value == 0:
+            self.setPixmap(self.off_img)
+        else:
+            self.setPixmap(self.on_img)
+
+    def set_value(self, val):
+        if val != self._value:
+            self._value = val
+            self.update_img()
+            self.emit_switchedSignal()
+
+    def emit_switchedSignal(self):
+        if self._value == 1:
+            self.switchedOn.emit()
+        else:
+            self.switchedOff.emit()
+
+    def toggle(self):
+        if self._value == 1:
+            self.set_value(0)
+        else:
+            self.set_value(1)
+
+    def isOn(self):
+        if self._value == 1:
+            return True
+        else:
+            return False
 
 
 class QHLine(QtWidgets.QFrame):
