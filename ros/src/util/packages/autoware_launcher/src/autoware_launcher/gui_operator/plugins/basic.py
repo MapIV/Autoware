@@ -15,19 +15,42 @@ class QImage(QtWidgets.QLabel):
 
         self.setPixmap(pixmap)
 
+class QImages(QtWidgets.QLabel):
+    clicked = QtCore.pyqtSignal()
+
+    def __init__(self, img_list, size=(100, 100), default=0):
+        super(QImages, self).__init__()
+
+        self.cur_i = default
+        self.pixamps = [QtGui.QPixmap(img) for img in img_list]
+
+        self.update_img()
+    
+    # This function is called when mouse is pressed
+    def mousePressEvent(self, event):
+        self.clicked.emit()
+
+    def update_img(self):
+        self.setPixmap(self.pixamps[self.cur_i])
+
+    def set_img(self, ind):
+        if ind != self.cur_i and ind < len(self.pixamps):
+            self.cur_i = ind
+            self.update_img()
+
 class QToggleImage(QtWidgets.QLabel):
     clicked = QtCore.pyqtSignal()
 
     switchedOn = QtCore.pyqtSignal()
     switchedOff = QtCore.pyqtSignal()
 
-    def __init__(self, on_img, off_img, size=(120, 120), default=0):
+    def __init__(self, off_img, on_img, size=(120, 120), default=0):
         super(QToggleImage, self).__init__()
 
         # size is (width, heigh)
         self._value = default
-        self.on_img = QtGui.QPixmap(on_img).scaled(size[0], size[1], QtCore.Qt.KeepAspectRatio)
         self.off_img = QtGui.QPixmap(off_img).scaled(size[0], size[1], QtCore.Qt.KeepAspectRatio)
+        self.on_img = QtGui.QPixmap(on_img).scaled(size[0], size[1], QtCore.Qt.KeepAspectRatio)
 
         self.update_img()
         self.clicked.connect(self.toggle)

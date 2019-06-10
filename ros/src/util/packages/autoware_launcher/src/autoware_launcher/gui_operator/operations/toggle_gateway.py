@@ -20,7 +20,7 @@ class AwToggleGatewayWidget(QtWidgets.QWidget):
         layout.addWidget(self.label)
 
         # self.switch = AwToggleSwitch()
-        self.switch = QToggleImage(myutils.package('resources/toggle_on.png'), myutils.package('resources/toggle_off.png'))
+        self.switch = QToggleImage(myutils.package('resources/toggle_off.png'), myutils.package('resources/toggle_on.png'))
         self.switch.switchedOn.connect(self.switchedOn)
         self.switch.switchedOff.connect(self.switchedOff)
         layout.addWidget(self.switch)

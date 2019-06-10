@@ -3,6 +3,8 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
+from ...core import myutils
+from ..plugins.basic import QImages
 
 class AwModeSelectWidget(QtWidgets.QWidget):
 
@@ -11,11 +13,11 @@ class AwModeSelectWidget(QtWidgets.QWidget):
         self.context = context
 
         # button
-        self.real_button = QtWidgets.QPushButton('REAL')
+        self.real_button = QImages([myutils.package('resources/real_off.png'), myutils.package('resources/real_on.png')], size=(150, 150), default=1)
         self.real_button.clicked.connect(self.select_real_mode)
-        self.rosbag_button = QtWidgets.QPushButton('ROSBAG')
+        self.rosbag_button = QImages([myutils.package('resources/rosbag_off.png'), myutils.package('resources/rosbag_on.png')], size=(150, 150))
         self.rosbag_button.clicked.connect(self.select_rosbag_mode)
-        self.sim_button = QtWidgets.QPushButton('SIM')
+        self.sim_button = QImages([myutils.package('resources/sim_off.png'), myutils.package('resources/sim_on.png')], size=(150, 150))
         self.sim_button.clicked.connect(self.select_sim_mode)
 
         # set layout
@@ -40,13 +42,22 @@ class AwModeSelectWidget(QtWidgets.QWidget):
         self.select_sim_mode_callback = f
 
     def select_real_mode(self):
+        self.real_button.set_img(1)
+        self.rosbag_button.set_img(0)
+        self.sim_button.set_img(0)
         if self.select_real_mode_callback is not None:
             self.select_real_mode_callback()
 
     def select_rosbag_mode(self):
+        self.real_button.set_img(0)
+        self.rosbag_button.set_img(1)
+        self.sim_button.set_img(0)
         if self.select_rosbag_mode_callback is not None:
             self.select_rosbag_mode_callback()
 
     def select_sim_mode(self):
+        self.real_button.set_img(0)
+        self.rosbag_button.set_img(0)
+        self.sim_button.set_img(1)
         if self.select_sim_mode_callback is not None:
             self.select_sim_mode_callback()
