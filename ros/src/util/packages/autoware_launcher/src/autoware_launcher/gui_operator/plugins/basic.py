@@ -3,6 +3,8 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
+import time
+
 
 class QHLine(QtWidgets.QFrame):
     def __init__(self):
@@ -123,3 +125,16 @@ class AwNode(object):
     # TODO
     def stop(self):
         self.status = False
+
+class AwThread(QtCore.QThread):
+    
+    update = QtCore.pyqtSignal()
+    
+    def __init__(self, parent, period):
+        super(AwThread, self).__init__(parent)
+        self.period = period
+ 
+    def run(self):
+        while True:
+            time.sleep(self.period)
+            self.update.emit()

@@ -15,6 +15,9 @@ class Context(object):
         self.computing_profile_list = ['dummy_cp1', 'dummy_cp2']
         self.computing_profile = self.computing_profile_list[0]
 
+	self.userhome_path = myutils.userhome();
+	self.rosbag_play_xml = myutils.package("resources/rosbagplay.xml")
+
     def set_map_profile(self, mp):
         self.map_profile = mp
 
