@@ -17,7 +17,10 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
         self.rosbag_path = ""
         self.repeat_rosbag = False
+        self.use_sim_time = False
         self.progress_rate = 0
+
+        self.rosparam_use_sim_time_proc = QtCore.QProcess(self)
 
         self.rosbag_info_proc = QtCore.QProcess(self)
         self.rosbag_play_proc = QtCore.QProcess(self)
@@ -62,8 +65,11 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         self.thread.update.connect(self.progress_update)
 
         # check box
-        self.checkbox = QtWidgets.QCheckBox('Repeat')
-        self.checkbox.stateChanged.connect(self.update_repeat_status)
+        self.repeat_cbox = QtWidgets.QCheckBox('Repeat')
+        self.repeat_cbox.stateChanged.connect(self.update_repeat_status)
+
+        self.use_sim_time_cbox = QtWidgets.QCheckBox('Use sim time')
+        self.use_sim_time_cbox.stateChanged.connect(self.update_use_sim_time_status)
 
         # set layout
         layout = QtWidgets.QVBoxLayout()
@@ -79,7 +85,10 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         sub_layout2.addWidget(self.pause_btn)
         layout.addLayout(sub_layout2)
         layout.addWidget(self.pbar)
-        layout.addWidget(self.checkbox)
+        sub_layout3 = QtWidgets.QHBoxLayout()
+        sub_layout3.addWidget(self.repeat_cbox)
+        sub_layout3.addWidget(self.use_sim_time_cbox)
+        layout.addLayout(sub_layout3)
         self.setLayout(layout)
 
     def open_rosbag_btn_clicked(self):
@@ -92,11 +101,16 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
             print('open rosbag file: ' + self.rosbag_path)
 
     def play_btn_clicked(self):
-        xml = self.context.rosbag_play_xml      
+        xml = self.context.rosbag_play_xml
+        # if self.repeat_rosbag:
+        #     option = "--loop --clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
+        # else:
+        #     option = "--clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
+        option = "--rate=" + str(self.rate) + " --start=" + str(self.offset)
         if self.repeat_rosbag:
-            option = "--loop --clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
-        else:
-            option = "--clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
+            option += " --loop"
+        if self.use_sim_time:
+            option += " --clock"
         arg = self.rosbag_path
         self.rosbag_play_proc.start('roslaunch {} options:="{}" bagfile:={}'.format(xml, option, arg))
         self.rosbag_play_proc.processId()
@@ -135,6 +149,14 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
             self.repeat_rosbag = True
         else:
             self.repeat_rosbag = False
+
+    def update_use_sim_time_status(self, state):
+        if state or state == QtCore.Qt.Checked:
+            self.use_sim_time = True
+            self.rosparam_use_sim_time_proc.start("rosparam set /use_sim_time true")
+        else:
+            self.use_sim_time = False
+            self.rosparam_use_sim_time_proc.start("rosparam set /use_sim_time false")
 
     def rate_changed(self, val):
         self.rate = val
