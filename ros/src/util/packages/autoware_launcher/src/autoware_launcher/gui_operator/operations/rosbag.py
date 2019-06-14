@@ -120,6 +120,8 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         self.set_progress(0)
         self.thread.start()
 
+        self.rosbag_play_proc.readyReadStandardOutput.connect(self.update_progress)
+
     def stop_btn_clicked(self):
         self.rosbag_play_proc.terminate()
         self.rosbag_finished()
@@ -183,3 +185,14 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
     def rosbag_end_time_completed(self):
         self.end_time = int(self.rosbag_end_time_proc.readAllStandardOutput().data().split('.')[0])
+
+    def update_progress(self):
+        text = self.rosbag_play_proc.readAllStandardOutput().data()
+
+        # parse text to show progresss
+        # text will be like " [RUNNING]  Bag Time: 1427157668.783592   Duration: 0.000000 / 479.163620"
+        l = text.find("Duration: ")
+        if l != -1:
+            nums = text[l:].split()    # ["Duration:", "0.000000", "/", "479.163620", ...]
+            self.progress_rate = 100 * float(nums[1])/float(nums[3])
+            self.set_progress(self.progress_rate)
