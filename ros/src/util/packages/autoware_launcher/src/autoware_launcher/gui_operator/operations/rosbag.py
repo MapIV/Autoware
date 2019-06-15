@@ -4,7 +4,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 from ..plugins.basic import AwLabeledLineEdit
-from ..plugins.basic import AwThread
 
 class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
@@ -17,17 +16,17 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
         self.rosbag_path = ""
         self.repeat_rosbag = False
+        self.use_sim_time = False
         self.progress_rate = 0
 
         self.rosbag_info_proc = QtCore.QProcess(self)
         self.rosbag_play_proc = QtCore.QProcess(self)
-        self.rosbag_progress_proc = QtCore.QProcess(self)
         self.rosbag_start_time_proc = QtCore.QProcess(self)
         self.rosbag_end_time_proc = QtCore.QProcess(self)
+        self.rosparam_use_sim_time_proc = QtCore.QProcess(self)
 
         self.rosbag_info_proc.finished.connect(self.rosbag_info_completed)
         self.rosbag_play_proc.finished.connect(self.rosbag_finished)
-        self.rosbag_progress_proc.finished.connect(self.rosbag_progress_completed)
         self.rosbag_start_time_proc.finished.connect(self.rosbag_start_time_completed)
         self.rosbag_end_time_proc.finished.connect(self.rosbag_end_time_completed)
 
@@ -58,12 +57,13 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         # progress bar
         self.pbar = QtWidgets.QProgressBar()
         self.set_progress(0)
-        self.thread = AwThread(self, period=2.0)
-        self.thread.update.connect(self.progress_update)
 
         # check box
-        self.checkbox = QtWidgets.QCheckBox('Repeat')
-        self.checkbox.stateChanged.connect(self.update_repeat_status)
+        self.repeat_cbox = QtWidgets.QCheckBox('Repeat')
+        self.repeat_cbox.stateChanged.connect(self.update_repeat_status)
+
+        self.use_sim_time_cbox = QtWidgets.QCheckBox('Use sim time')
+        self.use_sim_time_cbox.stateChanged.connect(self.update_use_sim_time_status)
 
         # set layout
         layout = QtWidgets.QVBoxLayout()
@@ -79,7 +79,10 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         sub_layout2.addWidget(self.pause_btn)
         layout.addLayout(sub_layout2)
         layout.addWidget(self.pbar)
-        layout.addWidget(self.checkbox)
+        sub_layout3 = QtWidgets.QHBoxLayout()
+        sub_layout3.addWidget(self.repeat_cbox)
+        sub_layout3.addWidget(self.use_sim_time_cbox)
+        layout.addLayout(sub_layout3)
         self.setLayout(layout)
 
     def open_rosbag_btn_clicked(self):
@@ -92,11 +95,16 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
             print('open rosbag file: ' + self.rosbag_path)
 
     def play_btn_clicked(self):
-        xml = self.context.rosbag_play_xml      
+        xml = self.context.rosbag_play_xml
+        # if self.repeat_rosbag:
+        #     option = "--loop --clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
+        # else:
+        #     option = "--clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
+        option = "--rate=" + str(self.rate) + " --start=" + str(self.offset)
         if self.repeat_rosbag:
-            option = "--loop --clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
-        else:
-            option = "--clock" + " --rate=" + str(self.rate) + " --start=" + str(self.offset)
+            option += " --loop"
+        if self.use_sim_time:
+            option += " --clock"
         arg = self.rosbag_path
         self.rosbag_play_proc.start('roslaunch {} options:="{}" bagfile:={}'.format(xml, option, arg))
         self.rosbag_play_proc.processId()
@@ -104,7 +112,7 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         self.stop_btn.setEnabled(True)
         self.pause_btn.setEnabled(True)
         self.set_progress(0)
-        self.thread.start()
+        self.rosbag_play_proc.readyReadStandardOutput.connect(self.update_progress)
 
     def stop_btn_clicked(self):
         self.rosbag_play_proc.terminate()
@@ -116,8 +124,6 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
     def rosbag_finished(self):
         self.progress_rate = 0
         self.set_progress(100)
-        self.thread.terminate()
-        self.thread.wait()
         self.play_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
         self.pause_btn.setEnabled(False)
@@ -136,20 +142,19 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         else:
             self.repeat_rosbag = False
 
+    def update_use_sim_time_status(self, state):
+        if state or state == QtCore.Qt.Checked:
+            self.use_sim_time = True
+            self.rosparam_use_sim_time_proc.start("rosparam set /use_sim_time true")
+        else:
+            self.use_sim_time = False
+            self.rosparam_use_sim_time_proc.start("rosparam set /use_sim_time false")
+
     def rate_changed(self, val):
         self.rate = val
 
     def offset_changed(self, val):
         self.offset = val
-
-    def progress_update(self):
-        self.set_progress(self.progress_rate)
-        self.rosbag_progress_proc.start("rostopic echo -n 1 /clock/clock/secs")
-
-    def rosbag_progress_completed(self):
-        time = self.rosbag_progress_proc.readAllStandardOutput().data()
-        self.current_time = [int(s) for s in time.split() if s.isdigit()][0]
-        self.progress_rate = 100*(self.current_time-self.start_time)/(self.end_time-self.start_time)
 
     def rosbag_info_completed(self):
         stdout = self.rosbag_info_proc.readAllStandardOutput().data().decode('utf-8')
@@ -161,3 +166,14 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
     def rosbag_end_time_completed(self):
         self.end_time = int(self.rosbag_end_time_proc.readAllStandardOutput().data().split('.')[0])
+
+    def update_progress(self):
+        text = self.rosbag_play_proc.readAllStandardOutput().data()
+
+        # parse text to show progresss
+        # text will be like " [RUNNING]  Bag Time: 1427157668.783592   Duration: 0.000000 / 479.163620"
+        l = text.find("Duration: ")
+        if l != -1:
+            nums = text[l:].split()    # ["Duration:", "0.000000", "/", "479.163620", ...]
+            self.progress_rate = 100 * float(nums[1])/float(nums[3])
+            self.set_progress(self.progress_rate)
