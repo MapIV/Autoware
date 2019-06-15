@@ -4,7 +4,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 from ..plugins.basic import AwLabeledLineEdit
-from ..plugins.basic import AwThread
 
 class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
@@ -20,17 +19,14 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         self.use_sim_time = False
         self.progress_rate = 0
 
-        self.rosparam_use_sim_time_proc = QtCore.QProcess(self)
-
         self.rosbag_info_proc = QtCore.QProcess(self)
         self.rosbag_play_proc = QtCore.QProcess(self)
-        self.rosbag_progress_proc = QtCore.QProcess(self)
         self.rosbag_start_time_proc = QtCore.QProcess(self)
         self.rosbag_end_time_proc = QtCore.QProcess(self)
+        self.rosparam_use_sim_time_proc = QtCore.QProcess(self)
 
         self.rosbag_info_proc.finished.connect(self.rosbag_info_completed)
         self.rosbag_play_proc.finished.connect(self.rosbag_finished)
-        self.rosbag_progress_proc.finished.connect(self.rosbag_progress_completed)
         self.rosbag_start_time_proc.finished.connect(self.rosbag_start_time_completed)
         self.rosbag_end_time_proc.finished.connect(self.rosbag_end_time_completed)
 
@@ -61,8 +57,6 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         # progress bar
         self.pbar = QtWidgets.QProgressBar()
         self.set_progress(0)
-        self.thread = AwThread(self, period=2.0)
-        self.thread.update.connect(self.progress_update)
 
         # check box
         self.repeat_cbox = QtWidgets.QCheckBox('Repeat')
@@ -118,8 +112,6 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         self.stop_btn.setEnabled(True)
         self.pause_btn.setEnabled(True)
         self.set_progress(0)
-        self.thread.start()
-
         self.rosbag_play_proc.readyReadStandardOutput.connect(self.update_progress)
 
     def stop_btn_clicked(self):
@@ -132,8 +124,6 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
     def rosbag_finished(self):
         self.progress_rate = 0
         self.set_progress(100)
-        self.thread.terminate()
-        self.thread.wait()
         self.play_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
         self.pause_btn.setEnabled(False)
@@ -165,15 +155,6 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
     def offset_changed(self, val):
         self.offset = val
-
-    def progress_update(self):
-        self.set_progress(self.progress_rate)
-        self.rosbag_progress_proc.start("rostopic echo -n 1 /clock/clock/secs")
-
-    def rosbag_progress_completed(self):
-        time = self.rosbag_progress_proc.readAllStandardOutput().data()
-        self.current_time = [int(s) for s in time.split() if s.isdigit()][0]
-        self.progress_rate = 100*(self.current_time-self.start_time)/(self.end_time-self.start_time)
 
     def rosbag_info_completed(self):
         stdout = self.rosbag_info_proc.readAllStandardOutput().data().decode('utf-8')
