@@ -54,7 +54,8 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def run_sensing_btn_clicked(self):
-        print('run sensing')
+        print('run sensing: ' + self.context.sensing_profile)
+        self.context.server.launch_node("root/sensing", True)
 
         # TODO run launch file
         nodes = [
@@ -68,6 +69,7 @@ class AwRealSensorWidget(QtWidgets.QWidget):
 
     def exit_sensing_btn_clicked(self):
         print('exit sensing')
+        self.context.server.launch_node("root/sensing", False)
 
         # TODO stop related nodes
         nodes = [
@@ -98,10 +100,15 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         self.actuation_node_list.update_node_list(self.actuation_nodes)
 
     def set_sensing_profile_contents(self):
-        self.sensing_profile_pdmenu.addItems(['dummy1', 'dummy2'])
+        self.sensing_profile_pdmenu.addItems(self.context.sensing_profile_list)
+
+        # load default sensing  
+        dirpath = "operator/sensing/" + self.sensing_profile_pdmenu.currentText()
+        self.context.server.load_profile_subtree(dirpath, "root/sensing")
 
     def on_sensing_profile_changed(self, text):
         print('select sensing profile: ' + text)
+        self.context.set_sensing_profile(text)
 
     def set_actuation_profile_contents(self):
         self.actuation_profile_pdmenu.addItems(['dummy1', 'dummy2'])

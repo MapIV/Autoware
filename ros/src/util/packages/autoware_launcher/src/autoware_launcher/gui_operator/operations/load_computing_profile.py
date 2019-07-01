@@ -28,6 +28,10 @@ class AwLoadComputingProfileWidget(QtWidgets.QWidget):
     def set_pdMenu_contents(self):
         self.pdMenu.addItems(self.context.computing_profile_list)
 
+        # load default computing
+        dirpath = "operator/computing/" + self.pdMenu.currentText()
+        self.context.server.load_profile_subtree(dirpath, "root/computing")
+
     def on_file_selected(self, text):
         print('select computing profile: ' + text)
         self.context.set_computing_profile(text)

@@ -21,14 +21,10 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
 
         self.rosbag_info_proc = QtCore.QProcess(self)
         self.rosbag_play_proc = QtCore.QProcess(self)
-        self.rosbag_start_time_proc = QtCore.QProcess(self)
-        self.rosbag_end_time_proc = QtCore.QProcess(self)
         self.rosparam_use_sim_time_proc = QtCore.QProcess(self)
 
         self.rosbag_info_proc.finished.connect(self.rosbag_info_completed)
         self.rosbag_play_proc.finished.connect(self.rosbag_finished)
-        self.rosbag_start_time_proc.finished.connect(self.rosbag_start_time_completed)
-        self.rosbag_end_time_proc.finished.connect(self.rosbag_end_time_completed)
 
         # button
         self.open_rosbag_btn = QtWidgets.QPushButton('Open Rosbag')
@@ -90,8 +86,6 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         if filepath:
             self.rosbag_path = filepath
             self.rosbag_info_proc.start("rosbag info " + self.rosbag_path)
-            self.rosbag_start_time_proc.start("rosbag info -y --key=start " + self.rosbag_path)
-            self.rosbag_end_time_proc.start("rosbag info -y --key=end " + self.rosbag_path)
             print('open rosbag file: ' + self.rosbag_path)
 
     def play_btn_clicked(self):
@@ -160,12 +154,6 @@ class AwRosbagSimulatorWidget(QtWidgets.QWidget):
         stdout = self.rosbag_info_proc.readAllStandardOutput().data().decode('utf-8')
         stderr = self.rosbag_info_proc.readAllStandardOutput().data().decode('utf-8')
         self.set_text(stdout + stderr)
-
-    def rosbag_start_time_completed(self):
-        self.start_time = int(self.rosbag_start_time_proc.readAllStandardOutput().data().split('.')[0])
-
-    def rosbag_end_time_completed(self):
-        self.end_time = int(self.rosbag_end_time_proc.readAllStandardOutput().data().split('.')[0])
 
     def update_progress(self):
         text = self.rosbag_play_proc.readAllStandardOutput().data()

@@ -32,7 +32,8 @@ class AwComputingWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def on_run_clicked(self):
-        print('run ' + self.context.computing_profile)
+        print('run computing' + self.context.computing_profile)
+        self.context.server.launch_node("root/computing", True)
 
         # TODO run launch file
         self.nodes = [
@@ -45,16 +46,17 @@ class AwComputingWidget(QtWidgets.QWidget):
         self.node_list.update_node_list(self.nodes)
 
     def on_exit_clicked(self):
-        print('on exit clicked')
+        print('exit computing')
+        self.context.server.launch_node("root/computing", False)
 
         # TODO stop related nodes
         for n in self.nodes:
             n.stop()
         self.node_list.update_node_list(self.nodes)
 
-    def on_cancel_clicked(self):
-        print('on load map cancel clicked')
-        self.set_progress(50)
+    # def on_cancel_clicked(self):
+    #     print('on load map cancel clicked')
+    #     self.set_progress(50)
 
     # TODO load computing profile
     def load_profile(self):

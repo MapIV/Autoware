@@ -8,14 +8,19 @@ class Context(object):
         self.server = AwLaunchServer()
         self.server.load_profile("operator/common")
 
-        path = myutils.profile("operator/maps")
-        self.map_profile_list = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
+        map_path = myutils.profile("operator/maps")
+        self.map_profile_list = [name for name in os.listdir(map_path) if os.path.isdir(os.path.join(map_path, name))]
         self.map_profile = self.map_profile_list[0]
 
-        self.computing_profile_list = ['dummy_cp1', 'dummy_cp2']
+        computing_path = myutils.profile("operator/computing")
+        self.computing_profile_list = [name for name in os.listdir(computing_path) if os.path.isdir(os.path.join(computing_path, name))]
         self.computing_profile = self.computing_profile_list[0]
 
-	self.userhome_path = myutils.userhome();
+        sensing_path = myutils.profile("operator/sensing")
+        self.sensing_profile_list = [name for name in os.listdir(sensing_path) if os.path.isdir(os.path.join(sensing_path, name))]
+        self.sensing_profile = self.sensing_profile_list[0]
+
+	self.userhome_path = myutils.userhome()
 	self.rosbag_play_xml = myutils.package("resources/rosbagplay.xml")
 
     def set_map_profile(self, mp):
@@ -29,3 +34,9 @@ class Context(object):
 
     def set_computing_profile_list(self, cp_list):
         self.computing_profile_list = cp_list
+
+    def set_sensing_profile(self, sp):
+        self.sensing_profile = sp
+
+    def set_sensing_profile_list(self, sp_list):
+        self.sensing_profile_list = sp_list
