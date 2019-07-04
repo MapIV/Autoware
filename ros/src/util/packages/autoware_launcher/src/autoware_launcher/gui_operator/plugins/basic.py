@@ -179,26 +179,31 @@ class AwNodeListWidget(QtWidgets.QWidget):
         self.target = target.split("/")
         self.depth = depth
 
-        layout = QtWidgets.QVBoxLayout()
+        self.node_name_label = QtWidgets.QLabel()
+        self.node_status_label = QtWidgets.QLabel()
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(self.node_name_label)
+        layout.addWidget(self.node_status_label)
+
         self.setLayout(layout)
 
     def update_node_list(self, nodes):
         self.nodes = nodes
-        self.remove_all_widgets()
+        # self.remove_all_widgets()
 
+        node_name_text = ""
+        node_status_text = ""
         for n in self.nodes:
-            widget = QtWidgets.QWidget()
-            hbox = QtWidgets.QHBoxLayout()
-            hbox.addWidget(QtWidgets.QLabel(n["name"]))
-            hbox.addWidget(QtWidgets.QLabel(n["status"]))
-            widget.setLayout(hbox)
+            node_name_text += n["name"] + "\n" + "\n"
+            node_status_text += n["status"] + "\n" + "\n"
+        self.node_name_label.setText(node_name_text)
+        self.node_status_label.setText(node_status_text)
 
-            self.layout().addWidget(widget)
-
-    def remove_all_widgets(self):
-        for i in reversed(range(self.layout().count())): 
-            if self.layout().itemAt(i) is not None:
-                self.layout().itemAt(i).widget().deleteLater()
+    # def remove_all_widgets(self):
+    #     for i in reversed(range(self.layout().count())): 
+    #         if self.layout().itemAt(i) is not None:
+    #             self.layout().itemAt(i).widget().deleteLater()
     
     def is_target_node(self, name):
         ns = name.split("/")
