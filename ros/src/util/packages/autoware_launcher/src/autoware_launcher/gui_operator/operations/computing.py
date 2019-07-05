@@ -3,7 +3,7 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from ..plugins.basic import AwNodeListWidget, AwNode
+from ..plugins.basic import AwNodeListWidget
 
 
 class AwComputingWidget(QtWidgets.QWidget):
@@ -21,8 +21,8 @@ class AwComputingWidget(QtWidgets.QWidget):
         self.exit_button.clicked.connect(self.on_exit_clicked)
 
         #  node list
-        self.nodes = []
-        self.node_list = AwNodeListWidget()
+        self.node_list = AwNodeListWidget(target="root/computing")
+        self.context.register_node_status_watcher_client(self.node_list)
 
         # set layout
         layout = QtWidgets.QVBoxLayout()
@@ -35,24 +35,9 @@ class AwComputingWidget(QtWidgets.QWidget):
         print('run computing' + self.context.computing_profile)
         self.context.server.launch_node("root/computing", True)
 
-        # TODO run launch file
-        self.nodes = [
-            AwNode(name='Localization', status=True),
-            AwNode(name='Detection', status=True),
-            AwNode(name='Tracking', status=True),
-            AwNode(name='Pedestrian', status=True),
-            AwNode(name='Decision', status=True),
-        ]
-        self.node_list.update_node_list(self.nodes)
-
     def on_exit_clicked(self):
         print('exit computing')
         self.context.server.launch_node("root/computing", False)
-
-        # TODO stop related nodes
-        for n in self.nodes:
-            n.stop()
-        self.node_list.update_node_list(self.nodes)
 
     # def on_cancel_clicked(self):
     #     print('on load map cancel clicked')

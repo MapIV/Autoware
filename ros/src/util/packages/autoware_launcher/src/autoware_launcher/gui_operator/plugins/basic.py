@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 
+from autoware_launcher.core.launch import AwLaunchNode
 import time
 
 class QImage(QtWidgets.QLabel):
@@ -172,43 +173,73 @@ class AwToggleSwitch(QtWidgets.QSlider):
 # TODO modify update logic
 class AwNodeListWidget(QtWidgets.QWidget):
 
-    def __init__(self, default=0):
+    def __init__(self, target="", depth=1):
         super(AwNodeListWidget, self).__init__()
         self.nodes = []
+        self.target = target.split("/")
+        self.depth = depth
 
-        layout = QtWidgets.QVBoxLayout()
+        self.node_name_label = QtWidgets.QLabel()
+        self.node_status_label = QtWidgets.QLabel()
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(self.node_name_label)
+        layout.addWidget(self.node_status_label)
+
         self.setLayout(layout)
 
     def update_node_list(self, nodes):
         self.nodes = nodes
-        self.remove_all_widgets()
+        # self.remove_all_widgets()
 
+        node_name_text = ""
+        node_status_text = ""
         for n in self.nodes:
-            widget = QtWidgets.QWidget()
-            hbox = QtWidgets.QHBoxLayout()
-            hbox.addWidget(QtWidgets.QLabel(n.name))
-            hbox.addWidget(QtWidgets.QLabel('On' if n.status else 'Off'))
-            widget.setLayout(hbox)
+            node_name_text += n["name"] + "\n" + "\n"
+            node_status_text += n["status"] + "\n" + "\n"
+        self.node_name_label.setText(node_name_text)
+        self.node_status_label.setText(node_status_text)
 
-            self.layout().addWidget(widget)
+    # def remove_all_widgets(self):
+    #     for i in reversed(range(self.layout().count())): 
+    #         if self.layout().itemAt(i) is not None:
+    #             self.layout().itemAt(i).widget().deleteLater()
+    
+    def is_target_node(self, name):
+        ns = name.split("/")
 
-    def remove_all_widgets(self):
-        for i in reversed(range(self.layout().count())): 
-            self.layout().itemAt(i).widget().deleteLater()
+        if len(ns) < len(self.target):
+            return False
+        
+        if len(ns) > len(self.target) + self.depth:
+            return False
+        
+        for i in range(len(self.target)):
+            if ns[i] != self.target[i]:
+                return False
+        return True
+    
+    # this function is called by NodeStatusWatcher
+    def node_status_updated(self, nodes):
+        target_nodes = []
+        for name, val in nodes.items():
+            if not self.is_target_node(name):
+                continue
 
+            if val == AwLaunchNode.STOP:
+                status = "Off"
+            elif val == AwLaunchNode.EXEC:
+                status = "On"
+            elif val == AwLaunchNode.TERM:
+                status = "Off"
+            else:
+                status = "N/A"
+            
+            target_nodes.append({"name": name, "status": status})
+                
+        # print(target_nodes)
+        self.update_node_list(target_nodes)
 
-class AwNode(object):
-    def __init__(self, **kargs):
-        self.name = kargs.get('name', 'node')
-        self.status = kargs.get('status', True)
-
-    # TODO
-    def start(self):
-        self.status = True
-
-    # TODO
-    def stop(self):
-        self.status = False
 
 class AwThread(QtCore.QThread):
     

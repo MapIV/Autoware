@@ -3,7 +3,7 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from ..plugins.basic import AwNodeListWidget, AwNode, QHLine
+from ..plugins.basic import AwNodeListWidget, QHLine
 
 
 class AwRealSensorWidget(QtWidgets.QWidget):
@@ -31,10 +31,10 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         self.actuation_profile_pdmenu.currentTextChanged.connect(self.on_actuation_profile_changed)
 
         #  node list
-        self.sensing_nodes = []
-        self.sensing_node_list = AwNodeListWidget()
-        self.actuation_nodes = []
-        self.actuation_node_list = AwNodeListWidget()
+        self.sensing_node_list = AwNodeListWidget(target="root/sensing")
+        self.context.register_node_status_watcher_client(self.sensing_node_list)
+        self.actuation_node_list = AwNodeListWidget(target="root/actuation")
+        self.context.register_node_status_watcher_client(self.actuation_node_list)
 
         # set layout
         layout = QtWidgets.QVBoxLayout()
@@ -57,47 +57,15 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         print('run sensing: ' + self.context.sensing_profile)
         self.context.server.launch_node("root/sensing", True)
 
-        # TODO run launch file
-        nodes = [
-            AwNode(name='lidar', status=True),
-            AwNode(name='camera', status=True),
-            AwNode(name='camera_lidar', status=True),
-            AwNode(name='multi_lidar', status=True),
-            AwNode(name='lidar_preprocessor', status=True),
-        ]
-        self.update_sensing_node(nodes)
-
     def exit_sensing_btn_clicked(self):
         print('exit sensing')
         self.context.server.launch_node("root/sensing", False)
 
-        # TODO stop related nodes
-        nodes = [
-            AwNode(name='lidar', status=False),
-            AwNode(name='camera', status=False),
-            AwNode(name='camera_lidar', status=False),
-            AwNode(name='multi_lidar', status=False),
-            AwNode(name='lidar_preprocessor', status=False),
-        ]
-        self.update_sensing_node(nodes)
-
     def engage_actuation_btn_clicked(self):
         print('engage actuation')
 
-        # TODO run launch file
-        self.actuation_nodes = [
-            AwNode(name='autonomoustuff', status=True),
-        ]
-        self.actuation_node_list.update_node_list(self.actuation_nodes)
-
     def disengage_actuation_btn_clicked(self):
         print('disengage_actuation')
-
-        # TODO stop related nodes
-        self.actuation_nodes = [
-            AwNode(name='autonomoustuff', status=False),
-        ]
-        self.actuation_node_list.update_node_list(self.actuation_nodes)
 
     def set_sensing_profile_contents(self):
         self.sensing_profile_pdmenu.addItems(self.context.sensing_profile_list)
