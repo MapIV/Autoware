@@ -21,6 +21,10 @@ class Context(object):
         self.sensing_profile_list = [name for name in os.listdir(sensing_path) if os.path.isdir(os.path.join(sensing_path, name))]
         self.sensing_profile = self.sensing_profile_list[0]
 
+        actuation_path = myutils.profile("operator/actuation")
+        self.actuation_profile_list = [name for name in os.listdir(actuation_path) if os.path.isdir(os.path.join(actuation_path, name))]
+        self.actuation_profile = self.actuation_profile_list[0]
+
         self.userhome_path = myutils.userhome()
         self.rosbag_play_xml = myutils.package("resources/rosbagplay.xml")
 
@@ -44,6 +48,12 @@ class Context(object):
 
     def set_sensing_profile_list(self, sp_list):
         self.sensing_profile_list = sp_list
+
+    def set_actuation_profile(self, ap):
+        self.actuation_profile = ap
+
+    def set_actuation_profile_list(self, ap_list):
+        self.actuation_profile_list = ap_list
     
     def register_node_status_watcher_client(self, client):
         self.node_status_watcher.register_client(client)

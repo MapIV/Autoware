@@ -63,9 +63,11 @@ class AwRealSensorWidget(QtWidgets.QWidget):
 
     def engage_actuation_btn_clicked(self):
         print('engage actuation')
+        self.context.server.launch_node("root/vehicle", True)
 
     def disengage_actuation_btn_clicked(self):
-        print('disengage_actuation')
+        print('disengage actuation')
+        self.context.server.launch_node("root/vehicle", False)
 
     def set_sensing_profile_contents(self):
         self.sensing_profile_pdmenu.addItems(self.context.sensing_profile_list)
@@ -79,10 +81,16 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         self.context.set_sensing_profile(text)
 
     def set_actuation_profile_contents(self):
-        self.actuation_profile_pdmenu.addItems(['dummy1', 'dummy2'])
+        # self.actuation_profile_pdmenu.addItems(['dummy1', 'dummy2'])
+        self.actuation_profile_pdmenu.addItems(self.context.actuation_profile_list)
+
+        # load default actuation profile
+        dirpath = "operator/actuation/" + self.actuation_profile_pdmenu.currentText()
+        self.context.server.load_profile_subtree(dirpath, "root/vehicle")
 
     def on_actuation_profile_changed(self, text):
         print('select actuation profile: ' + text)
+        self.context.set_actuation_profile(text)
 
     def update_sensing_node(self, nodes):
         self.sensing_nodes = nodes
