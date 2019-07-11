@@ -33,7 +33,7 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         #  node list
         self.sensing_node_list = AwNodeListWidget(target="root/sensing")
         self.context.register_node_status_watcher_client(self.sensing_node_list)
-        self.actuation_node_list = AwNodeListWidget(target="root/actuation")
+        self.actuation_node_list = AwNodeListWidget(target="root/vehicle")
         self.context.register_node_status_watcher_client(self.actuation_node_list)
 
         # set layout
@@ -81,7 +81,6 @@ class AwRealSensorWidget(QtWidgets.QWidget):
         self.context.set_sensing_profile(text)
 
     def set_actuation_profile_contents(self):
-        # self.actuation_profile_pdmenu.addItems(['dummy1', 'dummy2'])
         self.actuation_profile_pdmenu.addItems(self.context.actuation_profile_list)
 
         # load default actuation profile
