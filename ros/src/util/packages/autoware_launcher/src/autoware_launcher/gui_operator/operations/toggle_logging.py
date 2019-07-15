@@ -14,6 +14,14 @@ class AwToggleLoggingWidget(QtWidgets.QWidget):
         super(AwToggleLoggingWidget, self).__init__()
         self.context = context
 
+        self.logging_node = "logging_node"
+        self.logging_topic = " /points_raw"
+        self.logging_name = "autoware_bag"
+        self.logging_path = self.context.userhome_path
+
+        self.logging_start_proc = QtCore.QProcess(self)
+        self.logging_stop_proc = QtCore.QProcess(self)
+
         layout = QtWidgets.QVBoxLayout()
 
         self.label = QtWidgets.QLabel('Logging')
@@ -28,7 +36,9 @@ class AwToggleLoggingWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def switchedOn(self):
-        print('logging switch on')
+        print('logging start: ' + self.logging_path + "/" + self.logging_name)
+        self.logging_start_proc.start('rosbag record -O {}/{} {} __name:={}'.format(self.logging_path, self.logging_name, self.logging_topic, self.logging_node))
 
     def switchedOff(self):
-        print('logging switch off')
+        print('logging stopped')
+        self.logging_stop_proc.start("rosnode kill " + self.logging_node)
