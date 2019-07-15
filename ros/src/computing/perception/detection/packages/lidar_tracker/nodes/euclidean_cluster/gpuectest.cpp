@@ -786,28 +786,35 @@ std::string GPUECTest::test(pcl::PointCloud<pcl::PointXYZ>::Ptr input, int block
 
 	long long c_total_time, c_clustering_time, c_tree_build;
 	int *tmp;
+	int htmp = 0;
 
 	cudaMalloc(&tmp, sizeof(int));
+	cudaMemcpy(tmp, &htmp, sizeof(int), cudaMemcpyHostToDevice);
 	evertexBasedTest(input, block_size, threshold, v_total_time, v_set_input, v_graph_time, v_clustering_time, v_itr_num);
 	cudaDeviceReset();
 
 	cudaMalloc(&tmp, sizeof(int));
+	cudaMemcpy(tmp, &htmp, sizeof(int), cudaMemcpyHostToDevice);
 	rsvertexBasedTest(input, block_size, threshold, v_total_time2, v_set_input2, v_graph_time2, v_clustering_time2, v_itr_num2);
 	cudaDeviceReset();
 
 	cudaMalloc(&tmp, sizeof(int));
+	cudaMemcpy(tmp, &htmp, sizeof(int), cudaMemcpyHostToDevice);
 	eedgeBasedTest(input, block_size, threshold, e_total_time, e_set_input, e_graph_time, e_clustering_time, e_itr_num);
 	cudaDeviceReset();
 
 	cudaMalloc(&tmp, sizeof(int));
+	cudaMemcpy(tmp, &htmp, sizeof(int), cudaMemcpyHostToDevice);
 	rsedgeBasedTest(input, block_size, threshold, e_total_time2, e_set_input2, e_graph_time2, e_clustering_time2, e_itr_num2);
 	cudaDeviceReset();
 
 	cudaMalloc(&tmp, sizeof(int));
+	cudaMemcpy(tmp, &htmp, sizeof(int), cudaMemcpyHostToDevice);
 	ematrixBasedTest(input, block_size, threshold, m_total_time, m_set_input, m_initial, m_build_matrix, m_clustering_time, m_itr_num);
 	cudaDeviceReset();
 
 	cudaMalloc(&tmp, sizeof(int));
+	cudaMemcpy(tmp, &htmp, sizeof(int), cudaMemcpyHostToDevice);
 	rsmatrixBasedTest(input, block_size, threshold, m_total_time2, m_set_input2, m_initial2, m_build_matrix2, m_clustering_time2, m_itr_num2);
 	cudaDeviceReset();
 
