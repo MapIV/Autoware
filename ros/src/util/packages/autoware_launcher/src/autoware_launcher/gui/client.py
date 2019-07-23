@@ -206,6 +206,3 @@ class AwQtGuiClient(object):
 
     def update_node(self, lpath, ldata):
         return self.__server.update_node(lpath, ldata)
-
-
-

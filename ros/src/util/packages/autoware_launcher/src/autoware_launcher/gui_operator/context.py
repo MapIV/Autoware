@@ -1,6 +1,7 @@
 from autoware_launcher.core import AwLaunchServer, AwLaunchClientIF
 from autoware_launcher.core.launch import AwLaunchNode
 from autoware_launcher.core import myutils
+from autoware_launcher.core.rostopic import RosTopicAdapter
 import os
 
 class Context(object):
@@ -30,6 +31,8 @@ class Context(object):
 
         self.node_status_watcher = NodeStatusWatcher()
         self.server.register_client(self.node_status_watcher)
+
+        self.server.register_client(RosTopicAdapter())
 
     def set_map_profile(self, mp):
         self.map_profile = mp

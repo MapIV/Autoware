@@ -106,6 +106,9 @@ class AwLaunchServer(AwLaunchServerIF):
             isdiff, isexec = node.launch(xmode)
             if isdiff: difflist.append(node.path)
             if isexec: execlist.append(node.path)
+        for node in self.__profile.find(lpath).listparent():
+            if type(node) is AwLaunchNode:
+                if node.update_exec_status(): difflist.append(node.path)
         logger.debug("Update:" + str(difflist))
         logger.debug("Launch:" + str(execlist))
         for lpath in difflist:
@@ -118,9 +121,15 @@ class AwLaunchServer(AwLaunchServerIF):
             else:
                 self.__process.terminate(lpath)
 
-    def runner_finished(self, lpath): # ToDo: update ancestors status
-        self.__profile.find(lpath).status = AwLaunchNode.STOP
-        for client in self.__clients: client.status_updated(lpath, AwLaunchNode.STOP)
+    def runner_finished(self, lpath):
+        target = self.__profile.find(lpath)
+        target.status = AwLaunchNode.STOP
+        difflist = [target]
+        for node in target.listparent():
+            if type(node) is AwLaunchNode:
+                if node.update_exec_status(): difflist.append(node)
+        for node in difflist:
+            for client in self.__clients: client.status_updated(node.path, node.status)
 
     def request_json(self, request):
         try:

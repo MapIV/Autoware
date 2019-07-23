@@ -131,6 +131,15 @@ class AwLaunchNode(basetree.AwBaseNode):
         else:
             return self.__term()
 
+    def update_exec_status(self):
+        status = self.STOP
+        for child in self.children():
+            status |= child.status
+        if self.status != status:
+            self.status = status
+            return True
+        return False
+
     def __exec(self):
         if self.plugin.isleaf():
             if self.status == self.STOP:

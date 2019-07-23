@@ -97,6 +97,11 @@ class AwBaseNode(object):
         for child in self.children(): result.extend(child.listnode(True))
         return result
 
+    def listparent(self, this = False):
+        result = [self] if this else []
+        if self.__parent: result.extend(self.__parent.listparent(True))
+        return result
+
 
 class AwBaseTree(AwBaseNode):
 
