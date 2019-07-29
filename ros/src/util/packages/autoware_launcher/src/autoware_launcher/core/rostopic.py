@@ -10,6 +10,8 @@ class RosTopicAdapter(object):
     def __init__(self):
         rospy.init_node("autoware_launcher")
         self.__pub = rospy.Publisher("/autoware_launcher/callback", std_msgs.msg.String, queue_size=10)
+        self.__pub_status = rospy.Publisher("/autoware_launcher/status", std_msgs.msg.String, queue_size=1, latch=True)
+        self.__status_cache = {}
 
     def profile_updated(self):
         self.__pub.publish(std_msgs.msg.String(data="profile_updated"))
@@ -25,3 +27,6 @@ class RosTopicAdapter(object):
 
     def status_updated(self, lpath, state):
         self.__pub.publish(std_msgs.msg.String(data="status_updated {} {}".format(lpath, state)))
+        self.__status_cache[lpath] = state
+        status_list = ["{} {}".format(k, v) for k, v in self.__status_cache.items()]
+        self.__pub_status.publish(std_msgs.msg.String(data="\n".join(status_list)))
