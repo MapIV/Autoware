@@ -3,4 +3,4 @@ config:
   args.vehicle_info: $(find autoware_launcher)/resources/dummy.yaml
   args.vehicle_model: $(find vehicle_description)/urdf/default.urdf
   exts.description: Default
-plugin: leaf/vehicle
+plugin: leaf/actuation
