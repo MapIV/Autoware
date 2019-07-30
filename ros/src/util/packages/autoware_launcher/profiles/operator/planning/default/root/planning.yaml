@@ -1,9 +1,7 @@
 children:
-- localization
-- detection
 - prediction
 - decision
 - mission
 - motion
 config: {}
-plugin: node/computing
+plugin: node/planning
