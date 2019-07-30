@@ -1,10 +1,4 @@
 children:
-- map
-- sensing
-- localization
-- perception
-- actuation
-- planning
 - visualization
 config: {}
 plugin: root/operator
