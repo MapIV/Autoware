@@ -1,7 +1,0 @@
-children:
-- prediction
-- decision
-- mission
-- motion
-config: {}
-plugin: node/planning

@@ -1,5 +1,0 @@
-children: []
-config:
-  args.rviz_config_file: $(find autoware_launcher)/profiles/operator/common/root/visualization.rviz
-  exts.description: Default
-plugin: leaf/rviz

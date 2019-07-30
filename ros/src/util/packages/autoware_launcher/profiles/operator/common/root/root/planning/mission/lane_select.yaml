@@ -1,4 +1,0 @@
-children: []
-config:
-  args.enablePlannerDynamicSwitch: false
-plugin: refs/lane_select
