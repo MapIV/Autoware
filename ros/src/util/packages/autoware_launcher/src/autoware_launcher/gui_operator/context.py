@@ -10,21 +10,11 @@ class Context(object):
         self.server = AwLaunchServer()
         self.server.load_profile("operator/common")
 
-        map_path = myutils.profile("operator/maps")
-        self.map_profile_list = [name for name in os.listdir(map_path) if os.path.isdir(os.path.join(map_path, name))]
-        self.map_profile = self.map_profile_list[0]
+        self.dirpath = 'operator'
+        self.nodepath = 'root'
 
-        computing_path = myutils.profile("operator/computing")
-        self.computing_profile_list = [name for name in os.listdir(computing_path) if os.path.isdir(os.path.join(computing_path, name))]
-        self.computing_profile = self.computing_profile_list[0]
-
-        sensing_path = myutils.profile("operator/sensing")
-        self.sensing_profile_list = [name for name in os.listdir(sensing_path) if os.path.isdir(os.path.join(sensing_path, name))]
-        self.sensing_profile = self.sensing_profile_list[0]
-
-        actuation_path = myutils.profile("operator/actuation")
-        self.actuation_profile_list = [name for name in os.listdir(actuation_path) if os.path.isdir(os.path.join(actuation_path, name))]
-        self.actuation_profile = self.actuation_profile_list[0]
+        self.profile_list = {}
+        self.selected_profile = {}
 
         self.userhome_path = myutils.userhome()
         self.rosbag_play_xml = myutils.package("resources/rosbagplay.xml")
@@ -33,30 +23,19 @@ class Context(object):
         self.server.register_client(self.node_status_watcher)
 
         self.server.register_client(RosTopicAdapter())
-
-    def set_map_profile(self, mp):
-        self.map_profile = mp
-
-    def set_map_profile_list(self, mp_list):
-        self.map_profile_list = mp_list
-
-    def set_computing_profile(self, cp):
-        self.computing_profile = cp
-
-    def set_computing_profile_list(self, cp_list):
-        self.computing_profile_list = cp_list
-
-    def set_sensing_profile(self, sp):
-        self.sensing_profile = sp
-
-    def set_sensing_profile_list(self, sp_list):
-        self.sensing_profile_list = sp_list
-
-    def set_actuation_profile(self, ap):
-        self.actuation_profile = ap
-
-    def set_actuation_profile_list(self, ap_list):
-        self.actuation_profile_list = ap_list
+    
+    def set_profile_list(self, path, val):
+        self.profile_list[path] = val
+    
+    def set_selected_profile(self, path, val):
+        self.selected_profile[path] = val
+    
+    def load_profile_list(self, path):
+        dirpath = myutils.profile(path)
+        profile_list = []
+        if os.path.exists(dirpath):
+            profile_list = [name for name in os.listdir(dirpath) if os.path.isdir(os.path.join(dirpath, name))]
+        self.set_profile_list(path, profile_list)
     
     def register_node_status_watcher_client(self, client):
         self.node_status_watcher.register_client(client)
