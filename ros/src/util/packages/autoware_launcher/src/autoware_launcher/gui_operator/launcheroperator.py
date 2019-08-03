@@ -34,6 +34,8 @@ class LauncherOperatorPanel(QtWidgets.QWidget):
         # connect widgets
         self.main_view.real_tab.profile_runner_list.get('Map').set_run_callback(self.status_view.complete_map_progress)
         self.main_view.real_tab.profile_runner_list.get('Map').set_stop_callback(self.status_view.reset_map_progress)
+        self.main_view.rosbag_tab.profile_runner_list.get('Map').set_run_callback(self.status_view.complete_map_progress)
+        self.main_view.rosbag_tab.profile_runner_list.get('Map').set_stop_callback(self.status_view.reset_map_progress)
         self.main_view.set_select_real_callback(self.status_view.show_real_mode)
         self.main_view.set_select_rosbag_callback(self.status_view.show_rosbag_mode)
 
