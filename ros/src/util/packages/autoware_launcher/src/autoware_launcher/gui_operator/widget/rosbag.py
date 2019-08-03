@@ -19,7 +19,7 @@ class RosbagWidget(QtWidgets.QWidget):
 
         self.rosbag_path = ""
         self.repeat_rosbag = False
-        self.use_sim_time = False
+        self.use_sim_time = True
         self.progress_rate = 0
 
         self.rosbag_info_proc = QtCore.QProcess(self)
@@ -109,6 +109,18 @@ class RosbagWidget(QtWidgets.QWidget):
         layout.setAlignment(QtCore.Qt.AlignTop)
         self.setLayout(layout)
 
+        # initialize check box
+        if self.repeat_rosbag:
+            self.repeat_cbox.setChecked(QtCore.Qt.Checked)
+        else:
+            self.repeat_cbox.setChecked(QtCore.Qt.Unchecked)
+        if self.use_sim_time:
+            self.use_sim_time_cbox.setChecked(QtCore.Qt.Checked)
+            self.update_use_sim_time_status(QtCore.Qt.Checked)
+        else:
+            self.use_sim_time_cbox.setChecked(QtCore.Qt.Unchecked)
+            self.update_use_sim_time_status(QtCore.Qt.Unchecked)
+
     def open_rosbag_btn_clicked(self):
         filepath, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "Select Rosbag File", self.context.userhome_path)
         if filepath:
@@ -159,13 +171,13 @@ class RosbagWidget(QtWidgets.QWidget):
         self.pbar.setValue(val)
 
     def update_repeat_status(self, state):
-        if state or state == QtCore.Qt.Checked:
+        if state == QtCore.Qt.Checked:
             self.repeat_rosbag = True
         else:
             self.repeat_rosbag = False
 
     def update_use_sim_time_status(self, state):
-        if state or state == QtCore.Qt.Checked:
+        if state == QtCore.Qt.Checked:
             self.use_sim_time = True
             self.rosparam_use_sim_time_proc.start("rosparam set /use_sim_time true")
         else:
