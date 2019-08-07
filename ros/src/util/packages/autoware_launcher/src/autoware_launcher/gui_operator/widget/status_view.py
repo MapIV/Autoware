@@ -24,13 +24,13 @@ class StatusViewWidget(QtWidgets.QWidget):
         self.computing_text = QtWidgets.QLabel('Computing')
         computing_nodes = OrderedDict()
         computing_nodes['root/localization'] = 'Localization'
-        computing_nodes['root/detection'] = 'Detection'
+        # computing_nodes['root/detection'] = 'Detection'
         computing_nodes['root/perception/object/tracking'] = 'Tracking'
         computing_nodes['root/planning/prediction'] = 'Prediction'
         computing_nodes['root/planning/decision'] = 'Decision'
         computing_nodes['root/planning/mission'] = 'Mission'
         computing_nodes['root/planning/motion'] = 'Motion'
-        computing_nodes['root/wheel'] = 'Wheel'
+        # computing_nodes['root/wheel'] = 'Wheel'
         self.computing_node_status = NodeStatusList(computing_nodes)
         self.context.register_node_status_watcher_client(self.computing_node_status)
         computing_layout = QtWidgets.QVBoxLayout()
