@@ -21,7 +21,7 @@ class StatusViewWidget(QtWidgets.QWidget):
         map_layout.addWidget(self.map_pbar)
 
         # computing status
-        self.computing_text = QtWidgets.QLabel('Computing')
+        # self.computing_text = QtWidgets.QLabel('Computing')
         computing_nodes = OrderedDict()
         computing_nodes['root/localization'] = 'Localization'
         # computing_nodes['root/detection'] = 'Detection'
@@ -34,24 +34,24 @@ class StatusViewWidget(QtWidgets.QWidget):
         self.computing_node_status = NodeStatusList(computing_nodes)
         self.context.register_node_status_watcher_client(self.computing_node_status)
         computing_layout = QtWidgets.QVBoxLayout()
-        computing_layout.addWidget(self.computing_text)
+        # computing_layout.addWidget(self.computing_text)
         computing_layout.addWidget(self.computing_node_status)
 
         # sensing status
-        self.sensing_text = QtWidgets.QLabel('Sensing')
+        # self.sensing_text = QtWidgets.QLabel('Sensing')
         self.sensing_node_status = NodeStatusList('root/sensing', depth=1, ignore=['root/sensing'])
         self.context.register_node_status_watcher_client(self.sensing_node_status)
         sensing_layout = QtWidgets.QVBoxLayout()
-        sensing_layout.addWidget(self.sensing_text)
+        # sensing_layout.addWidget(self.sensing_text)
         sensing_layout.addWidget(self.sensing_node_status)
 
         # Actuation status
-        self.actuation_text = QtWidgets.QLabel('Actuation')
-        actuation_nodes = {'root/actuation': 'autonomoustuff'}
+        # self.actuation_text = QtWidgets.QLabel('Actuation')
+        actuation_nodes = {'root/actuation': 'Actuation'}
         self.actuation_node_status = NodeStatusList(actuation_nodes)
         self.context.register_node_status_watcher_client(self.actuation_node_status)
         actuation_layout = QtWidgets.QVBoxLayout()
-        actuation_layout.addWidget(self.actuation_text)
+        # actuation_layout.addWidget(self.actuation_text)
         actuation_layout.addWidget(self.actuation_node_status)
 
         # addjust widget size
@@ -86,19 +86,19 @@ class StatusViewWidget(QtWidgets.QWidget):
     def show_real_mode(self):
         self.map_text.show()
         self.map_pbar.show()
-        self.computing_text.show()
+        # self.computing_text.show()
         self.computing_node_status.show()
-        self.sensing_text.show()
+        # self.sensing_text.show()
         self.sensing_node_status.show()
-        self.actuation_text.show()
+        # self.actuation_text.show()
         self.actuation_node_status.show()
 
     def show_rosbag_mode(self):
         self.map_text.show()
         self.map_pbar.show()
-        self.computing_text.show()
+        # self.computing_text.show()
         self.computing_node_status.show()
-        self.sensing_text.hide()
+        # self.sensing_text.hide()
         self.sensing_node_status.hide()
-        self.actuation_text.hide()
+        # self.actuation_text.hide()
         self.actuation_node_status.hide()
