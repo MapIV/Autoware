@@ -1,0 +1,9 @@
+<library path="lib/liblauncher_monitor">
+  <class name="LauncherMonitor"
+         type="Launcher_Monitor"
+         base_class_type="rviz::Panel">
+    <description>
+      Autoware launcher_monitor plugin
+    </description>
+  </class>
+</library>

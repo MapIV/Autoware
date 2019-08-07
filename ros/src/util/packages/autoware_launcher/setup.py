@@ -13,6 +13,7 @@ setup_args = generate_distutils_setup(
         "autoware_launcher.gui_operator",
         "autoware_launcher.gui_operator.operations",
         "autoware_launcher.gui_operator.plugins",
+        "autoware_launcher.gui_operator.widget",
     ],
 )
 
