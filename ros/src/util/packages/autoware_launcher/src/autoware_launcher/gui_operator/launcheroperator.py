@@ -48,13 +48,17 @@ class LauncherOperatorPanel(QtWidgets.QWidget):
                 background: #164886; 
                 color: #ffffff;
             }
+            QPushButton:disabled{
+                background: #dddddd;
+                color: #222222;
+            }
             QPushButton:hover{
-                background: #265896; 
+                background: #3668a6; 
                 color: #ffffff;
             }
             QPushButton:pressed{
-                background: #ffffff; 
-                color: #000000;
+                background: #dddddd;
+                color: #222222;
             }
         '''
         self.setStyleSheet(style)
