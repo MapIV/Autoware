@@ -8,7 +8,8 @@ from PyQt5 import QtWidgets
 from autoware_launcher.core import myutils
 from .widget import MainViewWidget
 from .widget import StatusViewWidget
-from .plugins.basic import QImage
+#from .plugins.basic import QImage
+from .widget.basic import Image
 
 from .context import Context
 
@@ -19,7 +20,8 @@ class LauncherOperatorPanel(QtWidgets.QWidget):
         super(LauncherOperatorPanel, self).__init__()
         self.context = context
 
-        self.awlogo = QImage(myutils.package("resources/autoware_logo.png"))
+#        self.awlogo = QImage(myutils.package("resources/autoware_logo.png"))
+        self.awlogo = Image(myutils.package("resources/autoware_logo.png"))
         self.main_view = MainViewWidget(self.context)
         self.status_view = StatusViewWidget(self.context)
 
@@ -48,13 +50,17 @@ class LauncherOperatorPanel(QtWidgets.QWidget):
                 background: #164886; 
                 color: #ffffff;
             }
+            QPushButton:disabled{
+                background: #dddddd;
+                color: #222222;
+            }
             QPushButton:hover{
-                background: #265896; 
+                background: #3668a6; 
                 color: #ffffff;
             }
             QPushButton:pressed{
-                background: #ffffff; 
-                color: #000000;
+                background: #dddddd;
+                color: #222222;
             }
         '''
         self.setStyleSheet(style)

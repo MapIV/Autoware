@@ -16,6 +16,7 @@ class ProfileRunnerWidget(QtWidgets.QWidget):
         self.node = os.path.join(self.context.nodepath, name.lower())
         self.run_callback = lambda *arg: arg
         self.stop_callback = lambda *arg: arg
+        self.running = False
 
         # name label
         self.name_label = QtWidgets.QLabel(name)
@@ -48,6 +49,7 @@ class ProfileRunnerWidget(QtWidgets.QWidget):
 
         # load profile list
         self.update_pdmenu()
+        self.update_buttons()
     
     def set_dirpath(self, val, update_gui=True):
         self.dirpath = val
@@ -73,13 +75,33 @@ class ProfileRunnerWidget(QtWidgets.QWidget):
         self.context.set_selected_profile(self.dirpath, text)
 
     def on_run_clicked(self):
-        print('run {}'.format(self.node))
-        dirpath = os.path.join(self.dirpath, self.context.selected_profile[self.dirpath])
-        self.context.server.load_profile_subtree(dirpath, self.node)
-        self.context.server.launch_node(self.node, True)
-        self.run_callback()
+        if not self.running:
+            print('run {}'.format(self.node))
+            dirpath = os.path.join(self.dirpath, self.context.selected_profile[self.dirpath])
+            self.context.server.load_profile_subtree(dirpath, self.node)
+            self.context.server.launch_node(self.node, True)
+            self.run_callback()
+
+            self.running = True
+            self.update_buttons()
 
     def on_stop_clicked(self):
-        print('stop {}'.format(self.node))
-        self.context.server.launch_node(self.node, False)
-        self.stop_callback()
+        if self.running:
+            print('stop {}'.format(self.node))
+            self.context.server.launch_node(self.node, False)
+            self.stop_callback()
+
+            self.running = False
+            self.update_buttons()
+        
+    def update_buttons(self):
+        if self.running:
+            # self.run_button.setHidden(True)
+            # self.stop_button.setHidden(False)
+            self.run_button.setEnabled(False)
+            self.stop_button.setEnabled(True)
+        else:
+            # self.run_button.setHidden(False)
+            # self.stop_button.setHidden(True)
+            self.run_button.setEnabled(True)
+            self.stop_button.setEnabled(False)
