@@ -3,7 +3,7 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from ..plugins.basic import AwNodeListWidget, QHLine
+#from ..plugins.basic import AwNodeListWidget, QHLine
 from .profile_runner_list import ProfileRunnerListWidget
 from .open_rviz import OpenRvizWidget
 
