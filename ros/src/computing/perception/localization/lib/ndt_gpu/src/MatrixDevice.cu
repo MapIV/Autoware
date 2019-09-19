@@ -2,15 +2,8 @@
 #include "ndt_gpu/debug.h"
 
 namespace gpu {
-MatrixDevice::MatrixDevice(int rows, int cols) {
-	rows_ = rows;
-	cols_ = cols;
-	offset_ = 1;
-	fr_ = true;
-	buffer_ = NULL;
-}
-
-void MatrixDevice::memAlloc()
+template <typename T>
+void MatrixDevice<T>::memAlloc()
 {
 	if (buffer_ != NULL && fr_) {
 		checkCudaErrors(cudaFree(buffer_));
@@ -23,7 +16,8 @@ void MatrixDevice::memAlloc()
 	fr_ = true;
 }
 
-void MatrixDevice::memFree()
+template <typename T>
+void MatrixDevice<T>::memFree()
 {
 	if (fr_) {
 		if (buffer_ != NULL) {
@@ -33,11 +27,9 @@ void MatrixDevice::memFree()
 	}
 }
 
-
-SquareMatrixDevice::SquareMatrixDevice(int size) :
+template <typename T>
+SquareMatrixDevice<T>::SquareMatrixDevice(int size) :
 	MatrixDevice(size, size)
-{
-
-}
+{}
 
 }

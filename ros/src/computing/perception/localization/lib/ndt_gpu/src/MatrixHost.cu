@@ -6,22 +6,25 @@
 
 namespace gpu {
 
-MatrixHost::MatrixHost()
+template <typename T>
+MatrixHost<T>::MatrixHost()
 {
 	fr_ = false;
 }
 
-MatrixHost::MatrixHost(int rows, int cols) {
+template <typename T>
+MatrixHost<T>::MatrixHost(int rows, int cols) {
 	rows_ = rows;
 	cols_ = cols;
 	offset_ = 1;
 
-	buffer_ = (double*)malloc(sizeof(double) * rows_ * cols_ * offset_);
-	memset(buffer_, 0, sizeof(double) * rows_ * cols_ * offset_);
+	buffer_ = (T*)malloc(sizeof(T) * rows_ * cols_ * offset_);
+	memset(buffer_, 0, sizeof(T) * rows_ * cols_ * offset_);
 	fr_ = true;
 }
 
-MatrixHost::MatrixHost(int rows, int cols, int offset, double *buffer)
+template <typename T>
+MatrixHost<T>::MatrixHost(int rows, int cols, int offset, const T *buffer)
 {
 	rows_ = rows;
 	cols_ = cols;
@@ -30,21 +33,23 @@ MatrixHost::MatrixHost(int rows, int cols, int offset, double *buffer)
 	fr_ = false;
 }
 
-MatrixHost::MatrixHost(const MatrixHost& other) {
+template <typename T>
+MatrixHost<T>::MatrixHost(const MatrixHost<T>& other) {
 	rows_ = other.rows_;
 	cols_ = other.cols_;
 	offset_ = other.offset_;
 	fr_ = other.fr_;
 
 	if (fr_) {
-		buffer_ = (double*)malloc(sizeof(double) * rows_ * cols_ * offset_);
-		memcpy(buffer_, other.buffer_, sizeof(double) * rows_ * cols_ * offset_);
+		buffer_ = (T*)malloc(sizeof(T) * rows_ * cols_ * offset_);
+		memcpy(buffer_, other.buffer_, sizeof(T) * rows_ * cols_ * offset_);
 	} else {
 		buffer_ = other.buffer_;
 	}
 }
 
-extern "C" __global__ void copyMatrixDevToDev(MatrixDevice input, MatrixDevice output) {
+template <typename T>
+__global__ void copyMatrixDevToDev(MatrixDevice<T> input, MatrixDevice<T> output) {
 	int row = threadIdx.x;
 	int col = threadIdx.y;
 	int rows_num = input.rows();
@@ -54,26 +59,27 @@ extern "C" __global__ void copyMatrixDevToDev(MatrixDevice input, MatrixDevice o
 		output(row, col) = input(row, col);
 }
 
-bool MatrixHost::moveToGpu(MatrixDevice output) {
+template <typename T>
+bool MatrixHost<T>::moveToGpu(MatrixDevice<T> output) {
 	if (rows_ != output.rows() || cols_ != output.cols())
 		return false;
 
 	if (offset_ == output.offset()) {
-		checkCudaErrors(cudaMemcpy(output.buffer(), buffer_, sizeof(double) * rows_ * cols_ * offset_, cudaMemcpyHostToDevice));
+		checkCudaErrors(cudaMemcpy(output.buffer(), buffer_, sizeof(T) * rows_ * cols_ * offset_, cudaMemcpyHostToDevice));
 		return true;
 	}
 	else {
 		double *tmp;
 
-		checkCudaErrors(cudaMalloc(&tmp, sizeof(double) * rows_ * cols_ * offset_));
-		checkCudaErrors(cudaMemcpy(tmp, buffer_, sizeof(double) * rows_ * cols_ * offset_, cudaMemcpyHostToDevice));
+		checkCudaErrors(cudaMalloc(&tmp, sizeof(T) * rows_ * cols_ * offset_));
+		checkCudaErrors(cudaMemcpy(tmp, buffer_, sizeof(T) * rows_ * cols_ * offset_, cudaMemcpyHostToDevice));
 
-		MatrixDevice tmp_output(rows_, cols_, offset_, tmp);
+		MatrixDevice<T> tmp_output(rows_, cols_, offset_, tmp);
 
 		dim3 block_x(rows_, cols_, 1);
 		dim3 grid_x(1, 1, 1);
 
-		copyMatrixDevToDev<<<grid_x, block_x>>>(tmp_output, output);
+		copyMatrixDevToDev<T><<<grid_x, block_x>>>(tmp_output, output);
 		checkCudaErrors(cudaDeviceSynchronize());
 
 		checkCudaErrors(cudaFree(tmp));
@@ -82,35 +88,37 @@ bool MatrixHost::moveToGpu(MatrixDevice output) {
 	}
 }
 
-bool MatrixHost::moveToHost(MatrixDevice input) {
+template <typename T>
+bool MatrixHost<T>::moveToHost(const MatrixDevice<T> input) {
 	if (rows_ != input.rows() || cols_ != input.cols())
 		return false;
 
 	if (offset_ == input.offset()) {
-		checkCudaErrors(cudaMemcpy(buffer_, input.buffer(), sizeof(double) * rows_ * cols_ * offset_, cudaMemcpyDeviceToHost));
+		checkCudaErrors(cudaMemcpy(buffer_, input.buffer(), sizeof(T) * rows_ * cols_ * offset_, cudaMemcpyDeviceToHost));
 		return true;
 	}
 	else {
 		double *tmp;
 
-		checkCudaErrors(cudaMalloc(&tmp, sizeof(double) * rows_ * cols_ * offset_));
+		checkCudaErrors(cudaMalloc(&tmp, sizeof(T) * rows_ * cols_ * offset_));
 
-		MatrixDevice tmp_output(rows_, cols_, offset_, tmp);
+		MatrixDevice<T> tmp_output(rows_, cols_, offset_, tmp);
 
 		dim3 block_x(rows_, cols_, 1);
 		dim3 grid_x(1, 1, 1);
 
-		copyMatrixDevToDev << <grid_x, block_x >> >(input, tmp_output);
+		copyMatrixDevToDev<T><<<grid_x, block_x>>>(input, tmp_output);
 		checkCudaErrors(cudaDeviceSynchronize());
 
-		checkCudaErrors(cudaMemcpy(buffer_, tmp, sizeof(double) * rows_ * cols_ * offset_, cudaMemcpyDeviceToHost));
+		checkCudaErrors(cudaMemcpy(buffer_, tmp, sizeof(T) * rows_ * cols_ * offset_, cudaMemcpyDeviceToHost));
 		checkCudaErrors(cudaFree(tmp));
 
 		return true;
 	}
 }
 
-MatrixHost &MatrixHost::operator=(const MatrixHost &other)
+template <typename T>
+MatrixHost<T> &MatrixHost<T>::operator=(const MatrixHost<T> &other)
 {
 	rows_ = other.rows_;
 	cols_ = other.cols_;
@@ -118,8 +126,8 @@ MatrixHost &MatrixHost::operator=(const MatrixHost &other)
 	fr_ = other.fr_;
 
 	if (fr_) {
-		buffer_ = (double*)malloc(sizeof(double) * rows_ * cols_ * offset_);
-		memcpy(buffer_, other.buffer_, sizeof(double) * rows_ * cols_ * offset_);
+		buffer_ = (T*)malloc(sizeof(T) * rows_ * cols_ * offset_);
+		memcpy(buffer_, other.buffer_, sizeof(T) * rows_ * cols_ * offset_);
 	} else {
 		buffer_ = other.buffer_;
 	}
@@ -127,30 +135,33 @@ MatrixHost &MatrixHost::operator=(const MatrixHost &other)
 	return *this;
 }
 
-void MatrixHost::debug()
+template <typename T>
+void MatrixHost<T>::debug()
+{
+	std::cout << *this;
+}
+
+template <typename T>
+friend std::ostream &MatrixHost<T>::operator<<(std::ostream &os, const MatrixHost<T> &value)
 {
 	for (int i = 0; i < rows_; i++) {
 		for (int j = 0; j < cols_; j++) {
-			std::cout << buffer_[(i * cols_ + j) * offset_] << " ";
+			os << buffer_[(i * cols_ + j) * offset_] << " ";
 		}
 
-		std::cout << std::endl;
+		os << std::endl;
 	}
 
-	std::cout << std::endl;
+	os << std::endl;
+
+	return os;
 }
 
-MatrixHost::~MatrixHost()
+template <typename T>
+MatrixHost<T>::~MatrixHost()
 {
 	if (fr_)
 		free(buffer_);
-}
-
-
-SquareMatrixHost::SquareMatrixHost(int size) :
-	 MatrixHost(size, size)
-{
-
 }
 
 }

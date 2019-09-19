@@ -13,6 +13,7 @@
 #include <pcl/point_cloud.h>
 
 namespace gpu {
+template <typename PointSourceType, typename PointTargetType>
 class GRegistration {
 public:
 	GRegistration();

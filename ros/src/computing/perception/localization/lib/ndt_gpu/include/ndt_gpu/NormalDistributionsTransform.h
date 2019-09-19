@@ -9,6 +9,7 @@
 #include "Eigen/Geometry"
 
 namespace gpu {
+template <typename T>
 class GNormalDistributionsTransform: public GRegistration {
 public:
 	GNormalDistributionsTransform();
