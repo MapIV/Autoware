@@ -80,7 +80,8 @@ private:
 
 	void resetClusterListWrapper(int *cluster_list, int cluster_num);
 
-	void applyClusterChangedWrapper(int *cluster_name, int *cluster_list, int *cluster_location, int point_num);
+	void applyClusterChangedWrapper1(int *cluster_name, int *cluster_list, int point_num);
+	void applyClusterChangedWrapper0(int *cluster_name, int *cluster_location, int point_num);
 
 	void rebuildMatrixWrapper(int *old_matrix, int *merged_cluster_list,
 								int *new_matrix, int *new_cluster_location,

@@ -419,9 +419,13 @@ __global__ void boundariesSearch(float *x, float *y, float *z, int point_num, fl
 		int max_id_y = static_cast<int>(floorf((ty + radius) / voxel_y));
 		int max_id_z = static_cast<int>(floorf((tz + radius) / voxel_z));
 
-		int min_id_x = static_cast<int>(floorf((tx - radius) / voxel_x));
-		int min_id_y = static_cast<int>(floorf((ty - radius) / voxel_y));
-		int min_id_z = static_cast<int>(floorf((tz - radius) / voxel_z));
+//		int min_id_x = static_cast<int>(floorf((tx - radius) / voxel_x));
+//		int min_id_y = static_cast<int>(floorf((ty - radius) / voxel_y));
+//		int min_id_z = static_cast<int>(floorf((tz - radius) / voxel_z));
+
+		int min_id_x = max_id_x - static_cast<int>(floorf((radius * 2.0) / voxel_x));
+		int min_id_y = max_id_y - static_cast<int>(floorf((radius * 2.0) / voxel_y));
+		int min_id_z = max_id_z - static_cast<int>(floorf((radius * 2.0) / voxel_z));
 
 		max_id_x = (max_id_x > max_b_x) ? max_b_x - min_b_x : max_id_x - min_b_x;
 		max_id_y = (max_id_y > max_b_y) ? max_b_y - min_b_y : max_id_y - min_b_y;

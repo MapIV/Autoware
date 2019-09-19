@@ -216,7 +216,7 @@ void GpuEuclideanCluster2::extractClusters6(long long &total_time, long long &bu
 
 	total_time += timeDiff(start, end);
 
-#ifdef DEBUG_
+#ifndef DEBUG_
 	std::cout << "FINAL CLUSTER NUM = " << cluster_num_ << std::endl << std::endl;
 #endif
 }

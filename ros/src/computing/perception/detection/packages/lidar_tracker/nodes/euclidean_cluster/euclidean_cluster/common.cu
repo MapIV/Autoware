@@ -52,8 +52,6 @@ __global__ void convertFormat(pcl::PointXYZ *input, float *out_x, float *out_y, 
 		out_x[i] = tmp_input.x;
 		out_y[i] = tmp_input.y;
 		out_z[i] = tmp_input.z;
-		// Convert to 2d cloud
-		//out_z[i] = 0;
 	}
 }
 
@@ -82,6 +80,7 @@ void GpuEuclideanCluster2::setInputPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr in
 
 		gettimeofday(&start, NULL);
 #endif
+		std::cout << "Padded num = " << padded_num_ << std::endl;
 		checkCudaErrors(cudaMalloc(&x_, sizeof(float) * padded_num_));
 		checkCudaErrors(cudaMalloc(&y_, sizeof(float) * padded_num_));
 		checkCudaErrors(cudaMalloc(&z_, sizeof(float) * padded_num_));
@@ -176,12 +175,8 @@ std::vector<GpuEuclideanCluster2::GClusterIndex> GpuEuclideanCluster2::getOutput
 		cluster.points_in_cluster.push_back(i);
 	}
 
-	int point_num_test = 0;
-
 	for (unsigned int i = 0; i < output.size();) {
 		int number_of_pts = output[i].points_in_cluster.size();
-
-		point_num_test += number_of_pts;
 
 		if (number_of_pts < min_cluster_pts_ || number_of_pts > max_cluster_pts_)
 			output.erase(output.begin() + i);

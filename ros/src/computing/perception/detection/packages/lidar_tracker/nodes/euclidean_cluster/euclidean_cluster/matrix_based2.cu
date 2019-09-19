@@ -7,7 +7,7 @@
 void GpuEuclideanCluster2::extractClusters4(long long &total_time, long long &initial_time, long long &build_matrix, long long &clustering_time, int &iteration_num)
 {
 #ifdef DEBUG_
-	std::cout << "MATRIX-BASED 2: Use octree" << std::endl;
+	std::cout << "MATRIX-BASED 2: Use grid of voxels" << std::endl;
 #endif
 	total_time = initial_time = build_matrix = clustering_time = 0;
 	iteration_num = 0;
@@ -53,7 +53,7 @@ void GpuEuclideanCluster2::extractClusters4(long long &total_time, long long &in
 
 	clusterCollectorWrapper(cluster_list, new_cluster_num);
 
-	applyClusterChangedWrapper(cluster_name_, cluster_list, cluster_location, point_num_);
+	applyClusterChangedWrapper0(cluster_name_, cluster_location, point_num_);
 	gettimeofday(&end, NULL);
 
 	total_time += timeDiff(start, end);
@@ -161,8 +161,7 @@ void GpuEuclideanCluster2::extractClusters4(long long &total_time, long long &in
 		 */
 
 		if (hcheck) {
-			// Apply changes to the cluster_name array
-			applyClusterChangedWrapper(cluster_name_, cluster_list, cluster_location, point_num_);
+			applyClusterChangedWrapper1(cluster_name_, cluster_list, point_num_);
 
 			checkCudaErrors(cudaMemset(cluster_location, 0, sizeof(int) * (point_num_ + 1)));
 
@@ -176,8 +175,6 @@ void GpuEuclideanCluster2::extractClusters4(long long &total_time, long long &in
 			checkCudaErrors(cudaMalloc(&new_cluster_list, sizeof(int) * cluster_num_));
 
 			clusterCollectorWrapper(new_cluster_list, cluster_num_);
-
-			std::cout << "New cluster num = " << cluster_num_ << std::endl;
 
 			// Rebuild matrix
 			int *new_matrix;
@@ -193,6 +190,10 @@ void GpuEuclideanCluster2::extractClusters4(long long &total_time, long long &in
 
 			checkCudaErrors(cudaFree(matrix));
 			matrix = new_matrix;
+
+			// Apply changes to the cluster_name array
+			applyClusterChangedWrapper0(cluster_name_, cluster_location, point_num_);
+
 		}
 
 		itr++;
@@ -210,7 +211,7 @@ void GpuEuclideanCluster2::extractClusters4(long long &total_time, long long &in
 
 	gettimeofday(&start, NULL);
 //	renamingClusters(cluster_name_, cluster_location, point_num_);
-	applyClusterChangedWrapper(cluster_name_, cluster_list, cluster_location, point_num_);
+//	applyClusterChangedWrapper(cluster_name_, cluster_list, cluster_location, point_num_);
 
 	checkCudaErrors(cudaFree(matrix));
 	checkCudaErrors(cudaFree(cluster_list));
@@ -221,7 +222,9 @@ void GpuEuclideanCluster2::extractClusters4(long long &total_time, long long &in
 
 	total_time += timeDiff(start, end);
 
+#ifndef DEBUG_
 	std::cout << "FINAL CLUSTER NUM = " << cluster_num_ << std::endl << std::endl;
+#endif
 
 	//exit(1);
 }
