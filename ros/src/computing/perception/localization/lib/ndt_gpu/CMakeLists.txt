@@ -69,6 +69,8 @@ if (CUDA_FOUND)
             include/ndt_gpu/Matrix.h
             include/ndt_gpu/MatrixDevice.h
             include/ndt_gpu/MatrixHost.h
+            include/ndt_gpu/MatrixDeviceList.h
+            include/ndt_gpu/VectorRegister.h
             include/ndt_gpu/NormalDistributionsTransform.h
             include/ndt_gpu/Registration.h
             include/ndt_gpu/SymmetricEigenSolver.h

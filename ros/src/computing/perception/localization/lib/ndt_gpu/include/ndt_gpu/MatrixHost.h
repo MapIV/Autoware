@@ -1,36 +1,41 @@
-#ifndef MATRIX_HOST_H_
-#define MATRIX_HOST_H_
+#ifndef MAScalarRIX_HOSScalar_H_
+#define MAScalarRIX_HOSScalar_H_
 
 #include "Matrix.h"
 #include "MatrixDevice.h"
 
 namespace gpu {
-template <typename T>
-class MatrixHost : public Matrix<T> {
+template <typename Scalar, int Rows, int Cols>
+class MatrixHost : public Matrix<Scalar, Rows, Cols> {
 public:
 	MatrixHost();
-	MatrixHost(int rows, int cols);
-	MatrixHost(int rows, int cols, int offset, const T *buffer);
-	MatrixHost(const MatrixHost<T> &other);
-	MatrixHost(MatrixHost<T> &&other);
+	MatrixHost(int offset, Scalar *buffer);
+	MatrixHost(const MatrixHost<Scalar, Rows, Cols> &other);
+	MatrixHost(MatrixHost<Scalar, Rows, Cols> &&other);
 
-	bool moveToGpu(MatrixDevice<T> output);
-	bool moveToHost(const MatrixDevice<T> input);
+	bool moveToGpu(MatrixDevice<Scalar, Rows, Cols> output);
+	bool moveToHost(const MatrixDevice<Scalar, Rows, Cols> input);
 
 	// Copy assignment
-	MatrixHost<T>& operator=(const MatrixHost<T> &other);
+	MatrixHost<Scalar, Rows, Cols>& operator=(const MatrixHost<Scalar, Rows, Cols> &other);
 
 	// Move assignment
-	MatrixHost<T>& operator=(MatrixHost<T> &&other);
+	MatrixHost<Scalar, Rows, Cols>& operator=(MatrixHost<Scalar, Rows, Cols> &&other);
 
 	void debug();
 
-	friend std::ostream &operator<<(std::ostream &os, const MatrixHost<T> &value);
+	template <typename Scalar2, int Rows2, int Cols2>
+	friend std::ostream &operator<<(std::ostream &os, const MatrixHost<Scalar2, Rows2, Cols2> &value);
 
 	~MatrixHost();
+
 private:
-	bool fr_;
+	using Matrix<Scalar, Rows, Cols>::buffer_;
+	using Matrix<Scalar, Rows, Cols>::offset_;
+	using Matrix<Scalar, Rows, Cols>::fr_;
 };
+
+
 
 }
 

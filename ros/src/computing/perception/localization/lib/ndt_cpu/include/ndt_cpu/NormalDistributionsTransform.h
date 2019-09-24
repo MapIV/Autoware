@@ -12,19 +12,19 @@ class NormalDistributionsTransform: public Registration<PointSourceType, PointTa
 public:
 	NormalDistributionsTransform();
 
-	NormalDistributionsTransform(const NormalDistributionsTransform &other);
+	NormalDistributionsTransform(const NormalDistributionsTransform<PointSourceType, PointTargetType> &other);
 
 	void setStepSize(double step_size);
 
 	void setResolution(float resolution);
 
-	void setOutlierRatio(double olr);
+	void setOulierRatio(double olr);
 
 	double getStepSize() const;
 
 	float getResolution() const;
 
-	double getOutlierRatio() const;
+	double getOulierRatio() const;
 
 	double getTransformationProbability() const;
 

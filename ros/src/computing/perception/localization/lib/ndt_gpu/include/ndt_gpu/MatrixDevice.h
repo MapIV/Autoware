@@ -2,95 +2,117 @@
 #define MATRIX_DEVICE_H_
 
 #include "Matrix.h"
+#include <iostream>
 
 namespace gpu {
-template <typename T>
-class MatrixDevice : public Matrix<T> {
+template <typename Scalar = float, int Rows = 0, int Cols = 0>
+class MatrixDevice : public Matrix<Scalar, Rows, Cols> {
 public:
-	CUDAH MatrixDevice();
+	MatrixDevice();
 
-	CUDAH MatrixDevice(int rows, int cols);
+	CUDAH MatrixDevice(int offset, Scalar *buffer);
 
-	CUDAH MatrixDevice(int rows, int cols, int offset, const T *buffer);
+	CUDAH MatrixDevice(const MatrixDevice<Scalar, Rows, Cols> &other);
 
 	CUDAH bool isEmpty();
 
-	CUDAH MatrixDevice<T> col(int index);
+	CUDAH MatrixDevice<Scalar, Rows, 1> col(int index);
 
-	CUDAH MatrixDevice<T> row(int index);
+	CUDAH MatrixDevice<Scalar, Cols, 1> row(int index);
 
-	CUDAH void setBuffer(const T *buffer);
+	template <int RSize>
+	CUDAH MatrixDevice<Scalar, RSize, 1> col(int row, int col);
 
-	void memAlloc();
+	// Extract a row of CSize elements from (row, col)
+	template <int CSize>
+	CUDAH MatrixDevice<Scalar, 1, CSize> row(int row, int col);
+
+	CUDAH MatrixDevice<Scalar, Rows, Cols>& operator=(const MatrixDevice<Scalar, Rows, Cols> &other);
+
+	MatrixDevice<Scalar, Rows, Cols>& operator=(MatrixDevice<Scalar, Rows, Cols> &&other);
+
+	CUDAH void setBuffer(Scalar *buffer);
 
 	void memFree();
-
 private:
-	bool fr_;
+	using Matrix<Scalar, Rows, Cols>::buffer_;
+	using Matrix<Scalar, Rows, Cols>::offset_;
+	using Matrix<Scalar, Rows, Cols>::fr_;
 };
 
-template <typename T>
-CUDAH MatrixDevice<T>::MatrixDevice()
+template <typename Scalar, int Rows, int Cols>
+CUDAH MatrixDevice<Scalar, Rows, Cols>::MatrixDevice(int offset, Scalar *buffer) :
+Matrix<Scalar, Rows, Cols>(offset, buffer){}
+
+template <typename Scalar, int Rows, int Cols>
+CUDAH bool MatrixDevice<Scalar, Rows, Cols>::isEmpty()
 {
-	rows_ = cols_ = offset_ = 0;
-	buffer_ = NULL;
-	fr_ = true;
+	return (Rows == 0 || Cols == 0 || buffer_ == NULL);
 }
 
-template <typename T>
-CUDAH MatrixDevice<T>::MatrixDevice(int rows, int cols) {
-	rows_ = rows;
-	cols_ = cols;
-	offset_ = 1;
-	fr_ = true;
-	buffer_ = NULL;
-}
-
-template <typename T>
-CUDAH MatrixDevice<T>::MatrixDevice(int rows, int cols, int offset, const T *buffer)
+template <typename Scalar, int Rows, int Cols>
+CUDAH MatrixDevice<Scalar, Rows, Cols>::MatrixDevice(const MatrixDevice<Scalar, Rows, Cols> &other)
 {
-	rows_ = rows;
-	cols_ = cols;
-	offset_ = offset;
-	buffer_ = buffer;
+	buffer_ = other.buffer_;
+	offset_ = other.offset_;
 	fr_ = false;
 }
 
-template <typename T>
-CUDAH bool MatrixDevice<T>::isEmpty()
+template <typename Scalar, int Rows, int Cols>
+CUDAH MatrixDevice<Scalar, Rows, 1> MatrixDevice<Scalar, Rows, Cols>::col(int index)
 {
-	return (rows_ == 0 || cols_ == 0 || buffer_ == NULL);
+	return MatrixDevice<Scalar, Rows, 1>(offset_ * Cols, buffer_ + index * offset_);
 }
 
-template <typename T>
-CUDAH MatrixDevice<T> MatrixDevice<T>::col(int index)
+template <typename Scalar, int Rows, int Cols>
+CUDAH MatrixDevice<Scalar, Cols, 1> MatrixDevice<Scalar, Rows, Cols>::row(int index)
 {
-	return MatrixDevice<T>(rows_, 1, offset_ * cols_, buffer_ + index * offset_);
+	return MatrixDevice<Scalar, Cols, 1>(offset_, buffer_ + index * Cols * offset_);
 }
 
-template <typename T>
-CUDAH MatrixDevice<T> MatrixDevice<T>::row(int index)
+template <typename Scalar, int Rows, int Cols>
+template <int RSize>
+CUDAH MatrixDevice<Scalar, RSize, 1> MatrixDevice<Scalar, Rows, Cols>::col(int row, int col)
 {
-	return MatrixDevice<T>(1, cols_, offset_, buffer_ + index * cols_ * offset_);
+	return MatrixDevice<Scalar, RSize, 1>(offset_ * Cols, buffer_ + (row * Cols + col) * offset_);
 }
 
-template <typename T>
-CUDAH void MatrixDevice<T>::setBuffer(const T *buffer)
+template <typename Scalar, int Rows, int Cols>
+template <int CSize>
+CUDAH MatrixDevice<Scalar, 1, CSize> MatrixDevice<Scalar, Rows, Cols>::row(int row, int col)
+{
+	return MatrixDevice<Scalar, 1, CSize>(offset_, buffer_ + (row * Cols + col) * offset_);
+}
+
+template <typename Scalar, int Rows, int Cols>
+CUDAH void MatrixDevice<Scalar, Rows, Cols>::setBuffer(Scalar *buffer)
 {
 	buffer_ = buffer;
 }
 
+template <typename Scalar, int Rows, int Cols>
+CUDAH MatrixDevice<Scalar, Rows, Cols>& MatrixDevice<Scalar, Rows, Cols>::operator=(const MatrixDevice<Scalar, Rows, Cols> &other)
+{
 
+#pragma unroll
+	for (int i = 0; i < Rows; i++) {
+#pragma unroll
+		for (int j = 0; j < Cols; j++) {
+			buffer_[(i * Cols + j) * offset_] = other.buffer_[(i * Cols + j) * other.offset_];
+		}
+	}
 
-template <typename T>
-class SquareMatrixDevice : public MatrixDevice<T> {
-public:
-	SquareMatrixDevice(int size);
-};
-
+	return *this;
 }
 
-template class MatrixDevice<float>;
-template class MatrixDevice<double>;
+
+template <typename Scalar, int Size>
+class SquareMatrixDevice : public MatrixDevice<Scalar, Size, Size> {
+public:
+	SquareMatrixDevice() {}
+};
+
+
+}
 
 #endif

@@ -44,7 +44,7 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::setResoluti
 }
 
 template <typename PointSourceType, typename PointTargetType>
-void NormalDistributionsTransform<PointSourceType, PointTargetType>::setOutlierRatio(double olr)
+void NormalDistributionsTransform<PointSourceType, PointTargetType>::setOulierRatio(double olr)
 {
 	outlier_ratio_ = olr;
 }
@@ -62,7 +62,7 @@ float NormalDistributionsTransform<PointSourceType, PointTargetType>::getResolut
 }
 
 template <typename PointSourceType, typename PointTargetType>
-double NormalDistributionsTransform<PointSourceType, PointTargetType>::getOutlierRatio() const
+double NormalDistributionsTransform<PointSourceType, PointTargetType>::getOulierRatio() const
 {
 	return outlier_ratio_;
 }
