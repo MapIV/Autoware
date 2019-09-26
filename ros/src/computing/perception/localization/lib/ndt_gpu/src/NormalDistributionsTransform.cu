@@ -30,13 +30,13 @@ GNormalDistributionsTransform<PointSourceType, PointTargetType>::GNormalDistribu
 	transformation_epsilon_ = 0.1;
 	max_iterations_ = 35;
 
-	j_ang_ = MatrixHost<double, 24, 1>();
+	j_ang_ = MatrixHost<double>(24, 1);
 
-	h_ang_ = MatrixHost<double, 45, 1>();
+	h_ang_ = MatrixHost<double>(45, 1);
 
-	dj_ang_ = MatrixDevice<double, 24, 1>();
+	dj_ang_ = MatrixDevice<double>(24, 1);
 
-	dh_ang_ = MatrixDevice<double, 45, 1>();
+	dh_ang_ = MatrixDevice<double>(45, 1);
 
 	real_iterations_ = 0;
 }
@@ -66,8 +66,8 @@ GRegistration<PointSourceType, PointTargetType>(other)
 template <typename PointSourceType, typename PointTargetType>
 GNormalDistributionsTransform<PointSourceType, PointTargetType>::~GNormalDistributionsTransform()
 {
-	dj_ang_.memFree();
-	dh_ang_.memFree();
+	dj_ang_.free();
+	dh_ang_.free();
 
 }
 
@@ -225,10 +225,10 @@ void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeTra
 }
 
 /* Added on 2019/09/20 */
-__global__ void computePointGradient(MatrixDeviceList<float, 3, 1> points, int points_num,
+__global__ void computePointGradient(MatrixDeviceList<float> points, int points_num,
 										int *valid_points, int valid_points_num,
 										double *dj_ang,
-										MatrixDeviceList<double, 3, 6> point_gradients,
+										MatrixDeviceList<double> point_gradients,	// 3x6 matrix
 										int2 *mat_list, int mat_size)
 {
 	int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -242,7 +242,7 @@ __global__ void computePointGradient(MatrixDeviceList<float, 3, 1> points, int p
 
 	for (int i = id; i < valid_points_num; i += stride) {
 		int pid = valid_points[i];
-		MatrixDevice<double, 3, 6> pg = point_gradients(pid);
+		MatrixDevice<double> pg = point_gradients(pid);
 		VectorR<double> p = points(pid);
 
 		//Set the 3x3 block start from (0, 0) to identity matrix
@@ -261,10 +261,10 @@ __global__ void computePointGradient(MatrixDeviceList<float, 3, 1> points, int p
 
 
 /* Added 2019/09/21 */
-__global__ void computePointHessian(MatrixDeviceList<float, 3, 1> points, int points_num,
+__global__ void computePointHessian(MatrixDeviceList<float> points, int points_num,
 										int *valid_points, int valid_points_num,
 										double *dh_ang,
-										MatrixDeviceList<double, 18, 6> point_hessians,
+										MatrixDeviceList<double> point_hessians, // 18x6 matrix
 										int2 *mat_list, int mat_size)
 {
 	int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -279,7 +279,7 @@ __global__ void computePointHessian(MatrixDeviceList<float, 3, 1> points, int po
 
 	for (int i = id; i < valid_points_num; i += stride) {
 		int pid = valid_points[i];
-		MatrixDevice<double, 18, 6> ph = point_hessians(pid);
+		MatrixDevice<double> ph = point_hessians(pid);
 		VectorR<double> p = points(pid);
 
 		for (int k = 0; k < mat_size; k++) {
@@ -315,14 +315,14 @@ __global__ void computeScoreList(int *starting_voxel_id, int *voxel_id, int vali
 }
 
 /* Adding on 2019/09/24 */
-__global__ void computeScoreGradientListV2(MatrixDeviceList<float, 3, 1> trans_points,
+__global__ void computeScoreGradientListV2(MatrixDeviceList<float> trans_points,
 											int *valid_points,
 											int *starting_voxel_id, int *voxel_id, int valid_points_num,
-											MatrixDeviceList<double, 3, 1> centroids,
+											MatrixDeviceList<double> centroids,
 											int voxel_num, double *e_x_cov_x,
-											MatrixDeviceList<double, 3, 6> cov_dxd_pi,
+											MatrixDeviceList<double> cov_dxd_pi,	// 3x6 matrix
 											double gauss_d1, int valid_voxel_num,
-											MatrixDeviceList<double, 6, 1> score_gradients)
+											MatrixDeviceList<double> score_gradients)	// 6x1 matrix
 {
 	int id = threadIdx.x + blockIdx.x * blockDim.x;
 	int stride = blockDim.x * gridDim.x;
@@ -332,14 +332,14 @@ __global__ void computeScoreGradientListV2(MatrixDeviceList<float, 3, 1> trans_p
 		for (int i = id; i < valid_points_num; i += stride) {
 			int pid = valid_points[i];
 			VectorR<double> p = trans_points(pid);
-			MatrixDevice<double, 6, 1> sg = score_gradients(i);
+			MatrixDevice<double> sg = score_gradients(i);
 
 			double tmp_sg = 0.0;
 
 			for ( int j = starting_voxel_id[i]; j < starting_voxel_id[i + 1]; j++) {
 				int vid = voxel_id[j];
 				VectorR<double> centr = centroids(vid);
-				MatrixDevice<double, 3, 1> cov_dxd_pi_mat = cov_dxd_pi(j).col(col);
+				MatrixDevice<double> cov_dxd_pi_mat = cov_dxd_pi(j).col(col);
 				double tmp_ex = e_x_cov_x[j];
 
 				if (!(tmp_ex > 1 || tmp_ex < 0 || tmp_ex != tmp_ex)) {
@@ -356,10 +356,10 @@ __global__ void computeScoreGradientListV2(MatrixDeviceList<float, 3, 1> trans_p
 /* End of adding */
 
 /* First step to compute score gradient list for input points */
-__global__ void computeScoreGradientList(MatrixDeviceList<float, 3, 1> trans_points,
+__global__ void computeScoreGradientList(MatrixDeviceList<float> trans_points,
 											int *valid_points,
 											int *starting_voxel_id, int *voxel_id, int valid_points_num,
-											MatrixDeviceList<double, 3, 1> centroids,
+											MatrixDeviceList<double> centroids,
 											int voxel_num, double *e_x_cov_x,
 											double *cov_dxd_pi, double gauss_d1, int valid_voxel_num,
 											double *score_gradients)
@@ -376,7 +376,7 @@ __global__ void computeScoreGradientList(MatrixDeviceList<float, 3, 1> trans_poi
 
 		for (int i = id; i < valid_points_num; i += stride) {
 			int pid = valid_points[i];
-			MatrixDevice<float, 3, 1> p = trans_points(pid);
+			MatrixDevice<float> p = trans_points(pid);
 			double d_x = static_cast<double>(p(0));
 			double d_y = static_cast<double>(p(1));
 			double d_z = static_cast<double>(p(2));
@@ -385,7 +385,7 @@ __global__ void computeScoreGradientList(MatrixDeviceList<float, 3, 1> trans_poi
 
 			for ( int j = starting_voxel_id[i]; j < starting_voxel_id[i + 1]; j++) {
 				int vid = voxel_id[j];
-				MatrixDevice<double, 3, 1> centr = centroids(vid);
+				MatrixDevice<double> centr = centroids(vid);
 				double tmp_ex = e_x_cov_x[j];
 
 				if (!(tmp_ex > 1 || tmp_ex < 0 || tmp_ex != tmp_ex)) {
@@ -402,19 +402,19 @@ __global__ void computeScoreGradientList(MatrixDeviceList<float, 3, 1> trans_poi
 
 /* Intermediate step to compute e_x_cov_x */
 /* Adding on 2019/09/24 */
-__global__ void computeExCovXV2(MatrixDeviceList<float, 3, 1> trans_cloud, int *valid_points,
+__global__ void computeExCovXV2(MatrixDeviceList<float> trans_cloud, int *valid_points,
 								int *starting_voxel_id, int *voxel_id, int valid_points_num,
-								MatrixDeviceList<double, 3, 1> centroid,
+								MatrixDeviceList<double> centroid,
 								double gauss_d1, double gauss_d2,
 								double *e_x_cov_x,
-								MatrixDeviceList<double, 3, 3> inverse_covariance)
+								MatrixDeviceList<double> inverse_covariance)
 {
 	int id = threadIdx.x + blockIdx.x * blockDim.x;
 	int stride = blockDim.x * gridDim.x;
 
 	for (int i = id; i < valid_points_num; i += stride) {
 		int pid = valid_points[i];
-		MatrixDevice<float, 3, 1> p = trans_cloud(pid);
+		MatrixDevice<float> p = trans_cloud(pid);
 		double d_x = static_cast<double>(p(0));
 		double d_y = static_cast<double>(p(1));
 		double d_z = static_cast<double>(p(2));
@@ -423,8 +423,8 @@ __global__ void computeExCovXV2(MatrixDeviceList<float, 3, 1> trans_cloud, int *
 
 		for ( int j = starting_voxel_id[i]; j < starting_voxel_id[i + 1]; j++) {
 			int vid = voxel_id[j];
-			MatrixDevice<double, 3, 1> centr = centroid(vid);
-			MatrixDevice<double, 3, 3> icov = inverse_covariance(vid);
+			MatrixDevice<double> centr = centroid(vid);
+			MatrixDevice<double> icov = inverse_covariance(vid);
 
 			t_x = d_x - centr(0);
 			t_y = d_y - centr(1);
@@ -439,9 +439,9 @@ __global__ void computeExCovXV2(MatrixDeviceList<float, 3, 1> trans_cloud, int *
 
 /* End of adding */
 
-__global__ void computeExCovX(MatrixDeviceList<float, 3, 1> trans_cloud, int *valid_points,
+__global__ void computeExCovX(MatrixDeviceList<float> trans_cloud, int *valid_points,
 								int *starting_voxel_id, int *voxel_id, int valid_points_num,
-								MatrixDeviceList<double, 3, 1> centroid,
+								MatrixDeviceList<double> centroid,
 								double gauss_d1, double gauss_d2,
 								double *e_x_cov_x,
 								double *icov00, double *icov01, double *icov02,
@@ -521,13 +521,13 @@ __global__ void computeCovDxdPi(int *valid_points, int *starting_voxel_id, int *
 }
 
 /* Added 2019/09/23 */
-__global__ void computeHessianListS0(MatrixDeviceList<float, 3, 1> trans_cloud,
+__global__ void computeHessianListS0(MatrixDeviceList<float> trans_cloud,
 										int *valid_points,
 										int *starting_voxel_id, int *voxel_id, int valid_points_num,
-										MatrixDeviceList<double, 3, 1> centroid,
-										MatrixDeviceList<double, 3, 3> inverse_covariance,
-										MatrixDeviceList<double, 3, 6> point_gradients,
-										MatrixDeviceList<double, 6, 1> tmp_hessian,
+										MatrixDeviceList<double> centroid,
+										MatrixDeviceList<double> inverse_covariance,	//3x3
+										MatrixDeviceList<double> point_gradients,		//3x6
+										MatrixDeviceList<double> tmp_hessian,			//6x1
 										int valid_voxel_num)
 {
 	int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -537,11 +537,11 @@ __global__ void computeHessianListS0(MatrixDeviceList<float, 3, 1> trans_cloud,
 	if (col < 6) {
 		for (int i = id; i < valid_points_num; i += stride) {
 			int pid = valid_points[i];
-			MatrixDevice<float, 3, 1> p = trans_cloud(pid);
+			MatrixDevice<float> p = trans_cloud(pid);
 			double d_x = static_cast<double>(p(0));
 			double d_y = static_cast<double>(p(1));
 			double d_z = static_cast<double>(p(2));
-			MatrixDevice<double, 3, 6> pg = point_gradients(i);
+			MatrixDevice<double> pg = point_gradients(i);
 
 			double pg0 = pg(0, col);
 			double pg1 = pg(1, col);
@@ -549,9 +549,9 @@ __global__ void computeHessianListS0(MatrixDeviceList<float, 3, 1> trans_cloud,
 
 			for ( int j = starting_voxel_id[i]; j < starting_voxel_id[i + 1]; j++) {
 				int vid = voxel_id[j];
-				MatrixDevice<double, 6, 1> tmp_h = tmp_hessian(j);
-				MatrixDevice<double, 3, 1> centr = centroid(vid);
-				MatrixDevice<double, 3, 3> icov = inverse_covariance(vid);
+				MatrixDevice<double> tmp_h = tmp_hessian(j);
+				MatrixDevice<double> centr = centroid(vid);
+				MatrixDevice<double> icov = inverse_covariance(vid);
 				double t_hx = 0.0, t_hy = 0.0, t_hz = 0.0;
 
 				for (int k = 0; k < 3; k++) {
@@ -623,14 +623,14 @@ __global__ void computeHessianListS0(float *trans_x, float *trans_y, float *tran
 }
 
 /* Added on 2019/09/24 */
-__global__ void computeHessianListS1(MatrixDeviceList<float, 3, 1> trans_cloud,
+__global__ void computeHessianListS1(MatrixDeviceList<float> trans_cloud,
 										int *valid_points,
 										int *starting_voxel_id, int *voxel_id, int valid_points_num,
-										MatrixDeviceList<double, 3, 1> centroids,
-										double gauss_d1, double gauss_d2, MatrixDeviceList<double, 6, 6> hessians,
-										double *e_x_cov_x, MatrixDeviceList<double, 6, 1> tmp_hessian,
+										MatrixDeviceList<double> centroids,
+										double gauss_d1, double gauss_d2, MatrixDeviceList<double> hessians,	//6x6
+										double *e_x_cov_x, MatrixDeviceList<double> tmp_hessian,	//6x1
 										double *cov_dxd_pi,
-										MatrixDeviceList<double, 3, 6> point_gradients,
+										MatrixDeviceList<double> point_gradients,	//3x6
 										int valid_voxel_num)
 {
 	int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -645,11 +645,11 @@ __global__ void computeHessianListS1(MatrixDeviceList<float, 3, 1> trans_cloud,
 
 		for (int i = id; i < valid_points_num; i += stride) {
 			int pid = valid_points[i];
-			MatrixDevice<float, 3, 1> p = trans_cloud(pid);
+			MatrixDevice<float> p = trans_cloud(pid);
 			double d_x = static_cast<double>(p(0));
 			double d_y = static_cast<double>(p(1));
 			double d_z = static_cast<double>(p(2));
-			MatrixDevice<double, 3, 1> tmp_pg = point_gradients(i).col(col);
+			MatrixDevice<double> tmp_pg = point_gradients(i).col(col);
 
 			double pg0 = tmp_pg(0);
 			double pg1 = tmp_pg(1);
@@ -660,7 +660,7 @@ __global__ void computeHessianListS1(MatrixDeviceList<float, 3, 1> trans_cloud,
 			for ( int j = starting_voxel_id[i]; j < starting_voxel_id[i + 1]; j++) {
 				//Transformed coordinates
 				int vid = voxel_id[j];
-				MatrixDevice<double, 3, 1> centr = centroids(vid);
+				MatrixDevice<double> centr = centroids(vid);
 
 				double tmp_ex = e_x_cov_x[j];
 
@@ -744,14 +744,14 @@ __global__ void computeHessianListS1(float *trans_x, float *trans_y, float *tran
 }
 
 /* Added on 2019/09/24 */
-__global__ void computeHessianListS2V2(MatrixDeviceList<float, 3, 1> trans_cloud,
+__global__ void computeHessianListS2V2(MatrixDeviceList<float> trans_cloud,
 										int *valid_points,
 										int *starting_voxel_id, int *voxel_id, int valid_points_num,
-										MatrixDeviceList<double, 3, 1> centroids,
+										MatrixDeviceList<double> centroids,
 										double gauss_d1, double *e_x_cov_x,
-										MatrixDeviceList<double, 3, 3> inverse_covariance,
-										MatrixDeviceList<double, 18, 6> point_hessians,
-										MatrixDeviceList<double, 6, 6> hessians,
+										MatrixDeviceList<double> inverse_covariance,	//3x3
+										MatrixDeviceList<double> point_hessians,		//18x6
+										MatrixDeviceList<double> hessians,			//6x6
 										int valid_voxel_num, int itr_num)
 {
 	int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -770,65 +770,18 @@ __global__ void computeHessianListS2V2(MatrixDeviceList<float, 3, 1> trans_cloud
 				//Transformed coordinates
 				int vid = voxel_id[j];
 				double tmp_ex = e_x_cov_x[j];
-				MatrixDevice<double, 3, 1> centr = centroids(vid);
-				MatrixDevice<double, 3, 3> icov = inverse_covariance(vid);
+				MatrixDevice<double> centr = centroids(vid);
+				MatrixDevice<double> icov = inverse_covariance(vid);
+				int rows = icov.rows();
+				int cols = icov.cols();
 
 				if (!(tmp_ex > 1 || tmp_ex < 0 || tmp_ex != tmp_ex)) {
 					tmp_ex *= gauss_d1;
 
-					for (int k = 0; k < itr_num; k++) {
+					for (int k = 0; k < rows; k++) {
 						double tmp = 0;
 
-						for (int t = 0; t < itr_num; t++) {
-							tmp += icov(k, t) * ph(t);
-						}
-
-						final_hessian += (p(k) - centr(k)) * tmp * tmp_ex;
-					}
-				}
-			}
-
-			hessians(i)(row, col) = final_hessian;
-		}
-	}
-}
-
-__global__ void computeHessianListS2V3(MatrixDeviceList<float, 3, 1> trans_cloud,
-										int *valid_points,
-										int *starting_voxel_id, int *voxel_id, int valid_points_num,
-										MatrixDeviceList<double, 3, 1> centroids,
-										double gauss_d1, double *e_x_cov_x,
-										MatrixDeviceList<double, 3, 3> inverse_covariance,
-										MatrixDeviceList<double, 18, 6> point_hessians,
-										MatrixDeviceList<double, 6, 6> hessians,
-										int valid_voxel_num, int itr_num)
-{
-	int id = threadIdx.x + blockIdx.x * blockDim.x;
-	int stride = blockDim.x * gridDim.x;
-	int row = blockIdx.y;
-	int col = blockIdx.z;
-
-	if (row < 6 && col < 6) {
-		for (int i = id; i < valid_points_num; i += stride) {
-			int pid = valid_points[i];
-			VectorR<double> p = trans_cloud(pid);
-			VectorR<double> ph = point_hessians(i).col<3>(row * 3, col);
-			double final_hessian = hessians(i)(row, col);
-
-			for ( int j = starting_voxel_id[i]; j < starting_voxel_id[i + 1]; j++) {
-				//Transformed coordinates
-				int vid = voxel_id[j];
-				double tmp_ex = e_x_cov_x[j];
-				MatrixDevice<double, 3, 1> centr = centroids(vid);
-				MatrixDevice<double, 3, 3> icov = inverse_covariance(vid);
-
-				if (!(tmp_ex > 1 || tmp_ex < 0 || tmp_ex != tmp_ex)) {
-					tmp_ex *= gauss_d1;
-
-					for (int k = 0; k < itr_num; k++) {
-						double tmp = 0;
-
-						for (int t = 0; t < itr_num; t++) {
+						for (int t = 0; t < cols; t++) {
 							tmp += icov(k, t) * ph(t);
 						}
 
@@ -877,11 +830,12 @@ __global__ void sumScore(double *score, int full_size, int half_size)
 }
 
 template <typename PointSourceType, typename PointTargetType>
-double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeDerivatives(Eigen::Matrix<double, 6, 1> &score_gradient, Eigen::Matrix<double, 6, 6> &hessian,
-														MatrixDeviceList<float, 3, 1> trans_cloud,
-														int points_num, Eigen::Matrix<double, 6, 1> pose, bool compute_hessian)
+double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeDerivatives(Eigen::Matrix<double, 6, 1> &score_gradient,
+																							Eigen::Matrix<double, 6, 6> &hessian,
+																							MatrixDeviceList<float> trans_cloud,
+																							int points_num, Eigen::Matrix<double, 6, 1> pose, bool compute_hessian)
 {
-	MatrixHost<double, 6, 1> p;
+	MatrixHost<double> p(6, 1);
 
 	for (int i = 0; i < 6; i++) {
 		p(i) = pose(i, 0);
@@ -901,9 +855,9 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeD
 
 	voxel_grid_.radiusSearch(trans_cloud, points_num, resolution_, INT_MAX, &valid_points, &starting_voxel_id, &voxel_id, &valid_voxel_num, &valid_points_num);
 
-	MatrixDeviceList<double, 3, 3> covariance = voxel_grid_.getCovarianceList();
-	MatrixDeviceList<double, 3, 3> inverse_covariance = voxel_grid_.getInverseCovarianceList();
-	MatrixDeviceList<double, 3, 1> centroid = voxel_grid_.getCentroidList();
+	MatrixDeviceList<double> covariance = voxel_grid_.getCovarianceList();
+	MatrixDeviceList<double> inverse_covariance = voxel_grid_.getInverseCovarianceList();
+	MatrixDeviceList<double> centroid = voxel_grid_.getCentroidList();
 	int *points_per_voxel = voxel_grid_.getPointsPerVoxelList();
 	int voxel_num = voxel_grid_.getVoxelNum();
 
@@ -912,10 +866,10 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeD
 
 	//Update score gradient and hessian matrix
 
-	MatrixDeviceList<double, 6, 1> gradients(valid_points_num);
-	MatrixDeviceList<double, 6, 6> hessians(valid_points_num);
-	MatrixDeviceList<double, 3, 6> point_gradients(valid_points_num);
-	MatrixDeviceList<double, 18, 6> point_hessians(valid_points_num);
+	MatrixDeviceList<double> gradients(6, 1, valid_points_num);
+	MatrixDeviceList<double> hessians(6, 6, valid_points_num);
+	MatrixDeviceList<double> point_gradients(3, 6, valid_points_num);
+	MatrixDeviceList<double> point_hessians(18, 6, valid_points_num);
 
 	double *score;
 
@@ -1070,10 +1024,10 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeD
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
-	MatrixDevice<double, 6, 1> dgrad(valid_points_num, gradients(0, 0));
-	MatrixDevice<double, 6, 6> dhess(valid_points_num, hessians(0, 0));
-	MatrixHost<double, 6, 1> hgrad;
-	MatrixHost<double, 6, 6> hhess;
+	MatrixDevice<double> dgrad(6, 1, valid_points_num, gradients(0, 0));
+	MatrixDevice<double> dhess(6, 6, valid_points_num, hessians(0, 0));
+	MatrixHost<double> hgrad(6, 1);
+	MatrixHost<double> hhess(6, 6);
 
 	hgrad.moveToHost(dgrad);
 	hhess.moveToHost(dhess);
@@ -1117,7 +1071,7 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeD
 }
 
 template <typename PointSourceType, typename PointTargetType>
-void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeAngleDerivatives(MatrixHost<double, 6, 1> pose, bool compute_hessian)
+void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeAngleDerivatives(MatrixHost<double> pose, bool compute_hessian)
 {
 	double cx, cy, cz, sx, sy, sz;
 
@@ -1265,16 +1219,16 @@ void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeAng
 
 
 
-__global__ void gpuTransform(MatrixDeviceList<float, 3, 1> input, MatrixDeviceList<float, 3, 1> output,
-								int point_num, MatrixDevice<float, 3, 4> transform)
+__global__ void gpuTransform(MatrixDeviceList<float> input, MatrixDeviceList<float> output,
+								int point_num, MatrixDevice<float, 3, 4> transform)	//3x4
 {
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	int stride = blockDim.x * gridDim.x;
 	float x, y, z;
 
 	for (int i = idx; i < point_num; i += stride) {
-		MatrixDevice<float, 3, 1> in = input(i);
-		MatrixDevice<float, 3, 1> out = output(i);
+		MatrixDevice<float> in = input(i);
+		MatrixDevice<float> out = output(i);
 
 		x = in(0);
 		y = in(1);
@@ -1287,14 +1241,14 @@ __global__ void gpuTransform(MatrixDeviceList<float, 3, 1> input, MatrixDeviceLi
 }
 
 template <typename PointSourceType, typename PointTargetType>
-void GNormalDistributionsTransform<PointSourceType, PointTargetType>::transformPointCloud(MatrixDeviceList<float, 3, 1> input,
-																							MatrixDeviceList<float, 3, 1> output,
+void GNormalDistributionsTransform<PointSourceType, PointTargetType>::transformPointCloud(MatrixDeviceList<float> input,
+																							MatrixDeviceList<float> output,
 																							int points_number, Eigen::Matrix<float, 4, 4> transform)
 {
 	Eigen::Transform<float, 3, Eigen::Affine> t(transform);
 
-	MatrixHost<float, 3, 4> htrans;
-	MatrixDevice<float, 3, 4> dtrans;
+	MatrixHost<float> htrans(3, 4);
+	MatrixDevice<float> dtrans(3, 4);
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 4; j++) {
@@ -1313,14 +1267,14 @@ void GNormalDistributionsTransform<PointSourceType, PointTargetType>::transformP
 		checkCudaErrors(cudaDeviceSynchronize());
 	}
 
-	dtrans.memFree();
+	dtrans.free();
 }
 
 template <typename PointSourceType, typename PointTargetType>
 double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeStepLengthMT(const Eigen::Matrix<double, 6, 1> &x, Eigen::Matrix<double, 6, 1> &step_dir,
-															double step_init, double step_max, double step_min, double &score,
-															Eigen::Matrix<double, 6, 1> &score_gradient, Eigen::Matrix<double, 6, 6> &hessian,
-															MatrixDeviceList<float, 3, 1> trans_cloud, int points_num)
+																							double step_init, double step_max, double step_min, double &score,
+																							Eigen::Matrix<double, 6, 1> &score_gradient, Eigen::Matrix<double, 6, 6> &hessian,
+																							MatrixDeviceList<float> trans_cloud, int points_num)
 {
 	double phi_0 = -score;
 	double d_phi_0 = -(score_gradient.dot(step_dir));
@@ -1430,8 +1384,8 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeS
 //Copied from ndt.hpp
 template <typename PointSourceType, typename PointTargetType>
 double GNormalDistributionsTransform<PointSourceType, PointTargetType>::trialValueSelectionMT (double a_l, double f_l, double g_l,
-															double a_u, double f_u, double g_u,
-															double a_t, double f_t, double g_t)
+																								double a_u, double f_u, double g_u,
+																								double a_t, double f_t, double g_t)
 {
 	// Case 1 in Trial Value Selection [More, Thuente 1994]
 	if (f_t > f_l) {
@@ -1507,8 +1461,8 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::trialVal
 //Copied from ndt.hpp
 template <typename PointSourceType, typename PointTargetType>
 double GNormalDistributionsTransform<PointSourceType, PointTargetType>::updateIntervalMT (double &a_l, double &f_l, double &g_l,
-														double &a_u, double &f_u, double &g_u,
-														double a_t, double f_t, double g_t)
+																							double &a_u, double &f_u, double &g_u,
+																							double a_t, double f_t, double g_t)
 {
   // Case U1 in Update Algorithm and Case a in Modified Update Algorithm [More, Thuente 1994]
 	if (f_t > f_l) {
@@ -1541,16 +1495,16 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::updateIn
 }
 
 template <typename PointSourceType, typename PointTargetType>
-void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeHessian(Eigen::Matrix<double, 6, 6> &hessian, MatrixDeviceList<float, 3, 1> trans_cloud, int points_num, Eigen::Matrix<double, 6, 1> &p)
+void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeHessian(Eigen::Matrix<double, 6, 6> &hessian, MatrixDeviceList<float> trans_cloud, int points_num, Eigen::Matrix<double, 6, 1> &p)
 {
 	int *valid_points, *voxel_id, *starting_voxel_id;
 	int valid_voxel_num, valid_points_num;
 	//Radius Search
 	voxel_grid_.radiusSearch(trans_cloud, points_num, resolution_, INT_MAX, &valid_points, &starting_voxel_id, &voxel_id, &valid_voxel_num, &valid_points_num);
 
-	MatrixDeviceList<double, 3, 1> centroid = voxel_grid_.getCentroidList();
-	MatrixDeviceList<double, 3, 3> covariance = voxel_grid_.getCovarianceList();
-	MatrixDeviceList<double, 3, 3> inverse_covariance = voxel_grid_.getInverseCovarianceList();
+	MatrixDeviceList<double> centroid = voxel_grid_.getCentroidList();
+	MatrixDeviceList<double> covariance = voxel_grid_.getCovarianceList();
+	MatrixDeviceList<double> inverse_covariance = voxel_grid_.getInverseCovarianceList();
 	int *points_per_voxel = voxel_grid_.getPointsPerVoxelList();
 	int voxel_num = voxel_grid_.getVoxelNum();
 
@@ -1558,9 +1512,9 @@ void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeHes
 		return;
 
 	//Update score gradient and hessian matrix
-	MatrixDeviceList<double, 6, 6> hessians(valid_points_num);
-	MatrixDeviceList<double, 3, 6> point_gradients(valid_points_num);
-	MatrixDeviceList<double, 18, 6> point_hessians(valid_points_num);
+	MatrixDeviceList<double> hessians(6, 6, valid_points_num);
+	MatrixDeviceList<double> point_gradients(3, 6, valid_points_num);
+	MatrixDeviceList<double> point_hessians(18, 6, valid_points_num);
 
 	int2 *cell_list_dev;
 	checkCudaErrors(cudaMalloc(&cell_list_dev, sizeof(int2) * 32));
@@ -1596,7 +1550,7 @@ void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeHes
 
 	checkCudaErrors(cudaGetLastError());
 
-	MatrixDeviceList<double, 6, 1> tmp_hessian(valid_voxel_num);
+	MatrixDeviceList<double> tmp_hessian(6, 1, valid_voxel_num);
 
 	double *e_x_cov_x;
 
@@ -1681,8 +1635,8 @@ void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeHes
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
-	MatrixDevice<double, 6, 6> dhessian(valid_points_num, hessians(0, 0));
-	MatrixHost<double, 6, 6> hhessian;
+	MatrixDevice<double> dhessian(6, 6, valid_points_num, hessians(0, 0));
+	MatrixHost<double> hhessian(6, 6);
 
 	hhessian.moveToHost(dhessian);
 
@@ -1712,7 +1666,7 @@ void GNormalDistributionsTransform<PointSourceType, PointTargetType>::computeHes
 		checkCudaErrors(cudaFree(starting_voxel_id));
 	}
 
-	dhessian.memFree();
+	dhessian.free();
 }
 
 template <typename T>
@@ -1733,7 +1687,7 @@ double GNormalDistributionsTransform<PointSourceType, PointTargetType>::getFitne
 {
 	double fitness_score = 0.0;
 
-	MatrixDeviceList<float, 3, 1> trans_cloud(points_number_);
+	MatrixDeviceList<float> trans_cloud(3, 1, points_number_);
 
 	transformPointCloud(source_cloud_, trans_cloud, points_number_, final_transformation_);
 

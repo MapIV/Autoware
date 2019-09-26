@@ -6,65 +6,56 @@
 
 namespace gpu {
 
-template <typename Scalar, int Rows, int Cols>
-MatrixHost<Scalar, Rows, Cols>::MatrixHost()
+template <typename Scalar>
+MatrixHost<Scalar>::MatrixHost()
 {
-	if (Rows > 0 && Cols > 0) {
-		buffer_ = (Scalar *)malloc(sizeof(Scalar) * Rows * Cols);
-		offset_ = 1;
-		fr_ = true;
-	} else {
-		fr_ = false;
-		buffer_ = NULL;
-		offset_ = 0;
+	is_copied_ = false;
+	buffer_ = NULL;
+	offset_ = 0;
+	rows_ = cols_ = 0;
+}
+
+template <typename Scalar>
+MatrixHost<Scalar>::MatrixHost(int rows, int cols, int offset, Scalar *buffer) :
+Matrix<Scalar>(rows, cols, offset, buffer)
+{}
+
+template <typename Scalar>
+MatrixHost<Scalar>::MatrixHost(const MatrixHost<Scalar>& other) {
+	if (rows_ > 0 && cols_ > 0) {
+		offset_ = other.offset_;
+		is_copied_ = true;
+		rows_ = other.rows_;
+		cols_ = other.cols_;
+		buffer_ = other.buffer_;
 	}
 }
 
-template <typename Scalar, int Rows, int Cols>
-MatrixHost<Scalar, Rows, Cols>::MatrixHost(int offset, Scalar *buffer) :
-Matrix<Scalar, Rows, Cols>(offset, buffer)
-{
-	fr_ = false;
-}
-
-template <typename Scalar, int Rows, int Cols>
-MatrixHost<Scalar, Rows, Cols>::MatrixHost(const MatrixHost<Scalar, Rows, Cols>& other) {
-	if (Rows > 0 && Cols > 0) {
-		offset_ = 1;
-		fr_ = true;
-
-		buffer_ = (Scalar*)malloc(sizeof(Scalar) * Rows * Cols);
-
-		for (int i = 0; i < Rows; i++) {
-			for (int j = 0; j < Cols; j++) {
-				buffer_[i * Cols + j] = other.at(i, j);
-			}
-		}
-	}
-}
-
-template <typename Scalar, int Rows, int Cols>
-__global__ void copyMatrixDevToDev(MatrixDevice<Scalar, Rows, Cols> input, MatrixDevice<Scalar, Rows, Cols> output) {
+template <typename Scalar>
+__global__ void copyMatrixDevToDev(MatrixDevice<Scalar> input, MatrixDevice<Scalar> output) {
 	int row = threadIdx.x;
 	int col = threadIdx.y;
 
-	if (row < Rows && col < Cols)
+	if (row < input.rows() && col < input.cols())
 		output(row, col) = input(row, col);
 }
 
-template <typename Scalar, int Rows, int Cols>
-bool MatrixHost<Scalar, Rows, Cols>::moveToGpu(MatrixDevice<Scalar, Rows, Cols> output) {
+template <typename Scalar>
+bool MatrixHost<Scalar>::moveToGpu(MatrixDevice<Scalar> output) {
+	if (rows_ != output.rows() || cols_ != output.cols())
+		return false;
+
 	Scalar *tmp;
 
-	checkCudaErrors(cudaMalloc(&tmp, sizeof(Scalar) * Rows * Cols * offset_));
-	checkCudaErrors(cudaMemcpy(tmp, buffer_, sizeof(Scalar) * Rows * Cols * offset_, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMalloc(&tmp, sizeof(Scalar) * rows_ * cols_ * offset_));
+	checkCudaErrors(cudaMemcpy(tmp, buffer_, sizeof(Scalar) * rows_ * cols_ * offset_, cudaMemcpyHostToDevice));
 
-	MatrixDevice<Scalar, Rows, Cols> tmp_output(offset_, tmp);
+	MatrixDevice<Scalar> tmp_output(rows_, cols_, offset_, tmp);
 
-	dim3 block_x(Rows, Cols, 1);
+	dim3 block_x(rows_, cols_, 1);
 	dim3 grid_x(1, 1, 1);
 
-	copyMatrixDevToDev<Scalar, Rows, Cols><<<grid_x, block_x>>>(tmp_output, output);
+	copyMatrixDevToDev<Scalar><<<grid_x, block_x>>>(tmp_output, output);
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	checkCudaErrors(cudaFree(tmp));
@@ -72,70 +63,74 @@ bool MatrixHost<Scalar, Rows, Cols>::moveToGpu(MatrixDevice<Scalar, Rows, Cols> 
 	return true;
 }
 
-template <typename Scalar, int Rows, int Cols>
-bool MatrixHost<Scalar, Rows, Cols>::moveToHost(const MatrixDevice<Scalar, Rows, Cols> input) {
+template <typename Scalar>
+bool MatrixHost<Scalar>::moveToHost(const MatrixDevice<Scalar> input) {
+	if (rows_ != input.rows() || cols_ != input.cols())
+		return false;
+
 	Scalar *tmp;
 
-	checkCudaErrors(cudaMalloc(&tmp, sizeof(Scalar) * Rows * Cols * offset_));
+	checkCudaErrors(cudaMalloc(&tmp, sizeof(Scalar) * rows_ * cols_ * offset_));
 
-	MatrixDevice<Scalar, Rows, Cols> tmp_output(offset_, tmp);
+	MatrixDevice<Scalar> tmp_output(rows_, cols_, offset_, tmp);
 
-	dim3 block_x(Rows, Cols, 1);
+	dim3 block_x(rows_, cols_, 1);
 	dim3 grid_x(1, 1, 1);
 
-	copyMatrixDevToDev<Scalar, Rows, Cols><<<grid_x, block_x>>>(input, tmp_output);
+	copyMatrixDevToDev<Scalar><<<grid_x, block_x>>>(input, tmp_output);
 	checkCudaErrors(cudaDeviceSynchronize());
 
-	checkCudaErrors(cudaMemcpy(buffer_, tmp, sizeof(Scalar) * Rows * Cols * offset_, cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(buffer_, tmp, sizeof(Scalar) * rows_ * cols_ * offset_, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaFree(tmp));
 
 	return true;
 
 }
 
-template <typename Scalar, int Rows, int Cols>
-MatrixHost<Scalar, Rows, Cols> &MatrixHost<Scalar, Rows, Cols>::operator=(const MatrixHost<Scalar, Rows, Cols> &other)
+template <typename Scalar>
+MatrixHost<Scalar> &MatrixHost<Scalar>::operator=(const MatrixHost<Scalar> &other)
 {
-	for (int i = 0; i < Rows; i++) {
-		for (int j = 0; j < Cols; j++) {
-			buffer_[(i * Cols + j) * offset_] = other.at(i, j);
-		}
-	}
+	buffer_ = other.buffer_;
+	offset_ = other.offset_;
+	is_copied_ = true;
+	rows_ = other.rows_;
+	cols_ = other.cols_;
 
 	return *this;
 }
 
-template <typename Scalar, int Rows, int Cols>
-MatrixHost<Scalar, Rows, Cols> &MatrixHost<Scalar, Rows, Cols>::operator=(MatrixHost<Scalar, Rows, Cols> &&other)
+template <typename Scalar>
+MatrixHost<Scalar> &MatrixHost<Scalar>::operator=(MatrixHost<Scalar> &&other)
 {
-	if (fr_ && buffer_ != NULL) {
+	if (!is_copied_ && buffer_ != NULL) {
 		free(buffer_);
-		fr_ = false;
+		is_copied_ = false;
 	}
 
 	offset_ = other.offset_;
-	fr_ = other.fr_;
+	is_copied_ = false;
 	buffer_ = other.buffer_;
+	rows_ = other.rows_;
+	cols_ = other.cols_;
 
-	other.offset_ = 0;
-	other.fr_ = false;
+	other.is_copied_ = true;
 	other.buffer_ = NULL;
 
 	return *this;
 }
 
 
-template <typename Scalar, int Rows, int Cols>
-void MatrixHost<Scalar, Rows, Cols>::debug()
+template <typename Scalar>
+void MatrixHost<Scalar>::debug()
 {
 	std::cout << *this;
 }
 
-template <typename Scalar, int Rows, int Cols>
-std::ostream &operator<<(std::ostream &os, const MatrixHost<Scalar, Rows, Cols> &value)
+template <typename Scalar>
+std::ostream &operator<<(std::ostream &os, const MatrixHost<Scalar> &value)
 {
-	for (int i = 0; i < Rows; i++) {
-		for (int j = 0; j < Cols; j++) {
+	for (int i = 0; i < value.rows(); i++) {
+		for (int j = 0; j < value.cols(); j++) {
 			os << value.at(i, j) << " ";
 		}
 
@@ -147,19 +142,14 @@ std::ostream &operator<<(std::ostream &os, const MatrixHost<Scalar, Rows, Cols> 
 	return os;
 }
 
-template <typename Scalar, int Rows, int Cols>
-MatrixHost<Scalar, Rows, Cols>::~MatrixHost()
+template <typename Scalar>
+MatrixHost<Scalar>::~MatrixHost()
 {
-	if (fr_ && buffer_ != NULL)
+	if (!is_copied_ && buffer_ != NULL)
 		free(buffer_);
 }
 
-template class MatrixHost<float, 3, 3>;
-template class MatrixHost<double, 3, 3>;
-template class MatrixHost<double, 6, 1>;
-template class MatrixHost<double, 3, 6>;		// Point gradient class
-template class MatrixHost<double, 18, 6>;		// Point hessian class
-template class MatrixHost<double, 24, 1>;
-template class MatrixHost<double, 45, 1>;
+template class MatrixHost<float>;
+template class MatrixHost<double>;
 
 }

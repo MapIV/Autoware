@@ -15,17 +15,17 @@ SymmetricEigensolver3x3::SymmetricEigensolver3x3(int offset)
 	is_copied_ = false;
 }
 
-void SymmetricEigensolver3x3::setInputMatrices(MatrixDeviceList<double, 3, 3> input_matrices)
+void SymmetricEigensolver3x3::setInputMatrices(MatrixDeviceList<double> input_matrices)
 {
 	input_matrices_ = input_matrices;
 }
 
-void SymmetricEigensolver3x3::setEigenvectors(MatrixDeviceList<double, 3, 3> eigenvectors)
+void SymmetricEigensolver3x3::setEigenvectors(MatrixDeviceList<double> eigenvectors)
 {
 	eigenvectors_ = eigenvectors;
 }
 
-void SymmetricEigensolver3x3::setEigenvalues(MatrixDeviceList<double, 3, 1> eigenvalues)
+void SymmetricEigensolver3x3::setEigenvalues(MatrixDeviceList<double> eigenvalues)
 {
 	eigenvalues_ = eigenvalues;
 }

@@ -53,11 +53,11 @@ protected:
 	int max_iterations_;
 
 	//Source scanned point clouds
-	MatrixDeviceList<Scalar, 3, 1> source_cloud_;
+	MatrixDeviceList<Scalar> source_cloud_;
 	int points_number_;
 
 	//Transformed source point clouds
-	MatrixDeviceList<Scalar, 3, 1> trans_cloud_;
+	MatrixDeviceList<Scalar> trans_cloud_;
 
 	bool converged_;
 	int nr_iterations_;
@@ -67,7 +67,7 @@ protected:
 	bool target_cloud_updated_;
 
 	// Target cloud
-	MatrixDeviceList<Scalar, 3, 1> target_cloud_;
+	MatrixDeviceList<Scalar> target_cloud_;
 	int target_points_number_;
 
 	bool is_copied_;

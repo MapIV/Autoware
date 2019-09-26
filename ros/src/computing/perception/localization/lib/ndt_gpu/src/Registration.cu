@@ -101,14 +101,14 @@ bool GRegistration<PointSourceType, PointTargetType, Scalar>::hasConverged() con
 
 
 template <typename PointSourceType, typename Scalar>
-__global__ void convertInput(PointSourceType *input, MatrixDeviceList<Scalar, 3, 1> output, int point_num)
+__global__ void convertInput(PointSourceType *input, MatrixDeviceList<Scalar> output, int point_num)
 {
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	int stride = blockDim.x * gridDim.x;
 
 	for (int i = idx; i < point_num; i += stride) {
 		PointSourceType tmp = input[i];
-		MatrixDevice<Scalar, 3, 1> out = output(i);
+		MatrixDevice<Scalar> out = output(i);
 		out(0) = tmp.x;
 		out(1) = tmp.y;
 		out(2) = tmp.z;
@@ -137,7 +137,7 @@ void GRegistration<PointSourceType, PointTargetType, Scalar>::setInputSource(typ
 
 		// Free old buffers
 		source_cloud_.free();
-		source_cloud_ = std::move(MatrixDeviceList<Scalar, 3, 1>(points_number_));
+		source_cloud_ = std::move(MatrixDeviceList<Scalar>(3, 1, points_number_));
 
 		int block_x = (points_number_ > BLOCK_SIZE_X) ? BLOCK_SIZE_X : points_number_;
 		int grid_x = (points_number_ - 1) / block_x + 1;
@@ -148,7 +148,7 @@ void GRegistration<PointSourceType, PointTargetType, Scalar>::setInputSource(typ
 
 		// Free old transformed points
 		trans_cloud_.free();
-		trans_cloud_ = std::move(MatrixDeviceList<Scalar, 3, 1>(points_number_));
+		trans_cloud_ = std::move(MatrixDeviceList<Scalar>(3, 1, points_number_));
 
 		// Initially, also copy scanned points to transformed buffers
 		trans_cloud_.copy_from(source_cloud_);
@@ -184,7 +184,7 @@ void GRegistration<PointSourceType, PointTargetType, Scalar>::setInputTarget(typ
 
 		// Free old target buffers
 		target_cloud_.free();
-		target_cloud_ = std::move(MatrixDeviceList<Scalar, 3, 1>(target_points_number_));
+		target_cloud_ = std::move(MatrixDeviceList<Scalar>(3, 1, target_points_number_));
 
 		int block_x = (target_points_number_ > BLOCK_SIZE_X) ? BLOCK_SIZE_X : target_points_number_;
 		int grid_x = (target_points_number_ - 1) / block_x + 1;

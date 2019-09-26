@@ -8,15 +8,15 @@
 
 namespace gpu {
 
-template <typename Scalar, int Rows = 0, int Cols = 0>
+template <typename Scalar>
 class Matrix {
 public:
 	CUDAH Matrix();
 
-	CUDAH Matrix(int offset, Scalar *buffer);
+	CUDAH Matrix(int rows, int cols, int offset, Scalar *buffer);
 
-	CUDAH Matrix(const Matrix<Scalar, Rows, Cols> &other);
-	CUDAH Matrix(Matrix<Scalar, Rows, Cols> &&other);
+	CUDAH Matrix(const Matrix<Scalar> &other);
+	CUDAH Matrix(Matrix<Scalar> &&other);
 
 	CUDAH int rows() const;
 	CUDAH int cols() const;
@@ -29,317 +29,288 @@ public:
 	CUDAH void setCellVal(int row, int col, Scalar val);
 
 	// Deep copy to output
-	CUDAH void copy(Matrix<Scalar, Rows, Cols> &output);
-
-	CUDAH Scalar *cellAddr(int row, int col);
-
-	CUDAH Scalar *cellAddr(int index);
+	CUDAH bool copy_from(const Matrix<Scalar> &output);
 
 	//Assignment operator
 	// Copy assignment
-	CUDAH Matrix<Scalar, Rows, Cols>& operator=(const Matrix<Scalar, Rows, Cols> &input);
+	CUDAH Matrix<Scalar>& operator=(const Matrix<Scalar> &input);
 
 	CUDAH void set(int row, int col, Scalar val);
 
 	CUDAH Scalar at(int row, int col) const;
+	CUDAH Scalar at(int idx) const;
 
 	// Operators
 	CUDAH Scalar& operator()(int row, int col);
 	CUDAH Scalar& operator()(int index);
 
 	template <typename Scalar2>
-	CUDAH Matrix<Scalar, Rows, Cols>& operator*=(Scalar2 val);
+	CUDAH Matrix<Scalar>& operator*=(Scalar2 val);
 
 	template <typename Scalar2>
-	CUDAH Matrix<Scalar, Rows, Cols>& operator/=(Scalar2 val);
+	CUDAH Matrix<Scalar>& operator/=(Scalar2 val);
 
-	CUDAH bool transpose(Matrix<Scalar, Cols, Rows> &output);
+	CUDAH bool transpose(Matrix<Scalar> &output);
 
 	//Only applicable for 3x3 matrix or below
-	CUDAH bool inverse(Matrix<Scalar, Rows, Cols> &output);
+	CUDAH bool inverse(Matrix<Scalar> &output);
 
-	//CUDAH Scalar dot(const Matrix<Scalar, Rows, Cols> &other);
+	CUDAH Scalar dot(const Matrix<Scalar> &other);
 
-	CUDAH Matrix<Scalar, Rows, 1> col(int index);
+	CUDAH Matrix<Scalar> col(int index);
 
-	CUDAH Matrix<Scalar, 1, Cols> row(int index);
+	CUDAH Matrix<Scalar> row(int index);
 
 	// Extract a col of RSize elements from (row, col)
-	template <int RSize>
-	CUDAH Matrix<Scalar, RSize, 1> col(int row, int col);
+	CUDAH Matrix<Scalar> col(int row, int col, int rsize);
 
 	// Extract a row of CSize elements from (row, col)
-	template <int CSize>
-	CUDAH Matrix<Scalar, 1, CSize> row(int row, int col);
+	CUDAH Matrix<Scalar> row(int row, int col, int csize);
 
 protected:
 	Scalar *buffer_;
 	int offset_;
-	bool fr_;	// True: free buffer after being used, false: do nothing
+	bool is_copied_;	// True: free buffer after being used, false: do nothing
+	int rows_, cols_;
 };
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Matrix<Scalar, Rows, Cols>::Matrix() {
+template <typename Scalar>
+CUDAH Matrix<Scalar>::Matrix() {
 	offset_ = 0;
 	buffer_ = NULL;
-	fr_ = false;
+	is_copied_ = false;
+	rows_ = cols_ = 0;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Matrix<Scalar, Rows, Cols>::Matrix(int offset, Scalar *buffer) {
+template <typename Scalar>
+CUDAH Matrix<Scalar>::Matrix(int rows, int cols, int offset, Scalar *buffer) {
 	offset_ = offset;
 	buffer_ = buffer;
-	fr_ = false;
+	is_copied_ = true;
+	rows_ = rows;
+	cols_ = cols;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Matrix<Scalar, Rows, Cols>::Matrix(const Matrix<Scalar, Rows, Cols> &other) {
+template <typename Scalar>
+CUDAH Matrix<Scalar>::Matrix(const Matrix<Scalar> &other) {
 	offset_ = other.offset_;
 	buffer_ = other.buffer_;
-	fr_ = false;
+	is_copied_ = true;
+	rows_ = other.rows_;
+	cols_ = other.cols_;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Matrix<Scalar, Rows, Cols>::Matrix(Matrix<Scalar, Rows, Cols> &&other) {
+template <typename Scalar>
+CUDAH Matrix<Scalar>::Matrix(Matrix<Scalar> &&other) {
 	offset_ = other.offset_;
 	buffer_ = other.buffer_;
-	fr_ = other.fr_;
+	is_copied_ = false;
+	rows_ = other.rows_;
+	cols_ = other.cols_;
 
 	other.offset_ = 0;
 	other.buffer_ = NULL;
-	other.fr_ = false;
+	other.is_copied_ = true;
+	other.rows_ = other.cols_ = 0;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH int Matrix<Scalar, Rows, Cols>::rows() const {
-	return Rows;
+template <typename Scalar>
+CUDAH int Matrix<Scalar>::rows() const {
+	return rows_;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH int Matrix<Scalar, Rows, Cols>::cols() const {
-	return Cols;
+template <typename Scalar>
+CUDAH int Matrix<Scalar>::cols() const {
+	return cols_;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH int Matrix<Scalar, Rows, Cols>::offset() const {
+template <typename Scalar>
+CUDAH int Matrix<Scalar>::offset() const {
 	return offset_;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Scalar *Matrix<Scalar, Rows, Cols>::buffer() const {
+template <typename Scalar>
+CUDAH Scalar *Matrix<Scalar>::buffer() const {
 	return buffer_;
 }
 
 
-template <typename Scalar, int Rows, int Cols> CUDAH void Matrix<Scalar, Rows, Cols>::setOffset(int offset) { offset_ = offset; }
-template <typename Scalar, int Rows, int Cols> CUDAH void Matrix<Scalar, Rows, Cols>::setBuffer(Scalar *buffer) { buffer_ = buffer; }
-template <typename Scalar, int Rows, int Cols> CUDAH void Matrix<Scalar, Rows, Cols>::setCellVal(int row, int col, Scalar val) {
-	buffer_[(row * Cols + col) * offset_] = val;
+template <typename Scalar> CUDAH void Matrix<Scalar>::setOffset(int offset) { offset_ = offset; }
+template <typename Scalar> CUDAH void Matrix<Scalar>::setBuffer(Scalar *buffer) { buffer_ = buffer; }
+template <typename Scalar> CUDAH void Matrix<Scalar>::setCellVal(int row, int col, Scalar val) {
+	buffer_[(row * cols_ + col) * offset_] = val;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH void Matrix<Scalar, Rows, Cols>::copy(Matrix<Scalar, Rows, Cols> &output) {
-	for (int i = 0; i < Rows; i++) {
-		for (int j = 0; j < Cols; j++) {
-			output(i, j) = buffer_[(i * Cols + j) * offset_];
+template <typename Scalar>
+CUDAH bool Matrix<Scalar>::copy_from(const Matrix<Scalar> &output) {
+	if (rows_ == output.rows_ && cols_ == output.cols_) {
+		for (int i = 0; i < rows_; i++) {
+			for (int j = 0; j < cols_; j++) {
+				buffer_[(i * cols_ + j) * offset_] = output.at(i, j);
+			}
 		}
-	}
-}
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Scalar *Matrix<Scalar, Rows, Cols>::cellAddr(int row, int col) {
-	if (row >= Rows || col >= Cols || row < 0 || col < 0)
-		return NULL;
-
-	return buffer_ + (row * Cols + col) * offset_;
-}
-
-template <typename Scalar, int Rows, int Cols>
-CUDAH Scalar *Matrix<Scalar, Rows, Cols>::cellAddr(int index) {
-	if (Rows == 1 && index >= 0 && index < Cols) {
-			return buffer_ + index * offset_;
-	}
-	else if (Cols == 1 && index >= 0 && index < Rows) {
-			return buffer_ + index * offset_;
+		return true;
 	}
 
-	return NULL;
+	return false;
 }
 
-//Assignment operator
-template <typename Scalar, int Rows, int Cols>
-CUDAH Matrix<Scalar, Rows, Cols>& Matrix<Scalar, Rows, Cols>::operator=(const Matrix<Scalar, Rows, Cols> &input) {
-	offset_ = input.offset_;
-	buffer_ = input.buffer_;
+//Copy assignment
+template <typename Scalar>
+CUDAH Matrix<Scalar>& Matrix<Scalar>::operator=(const Matrix<Scalar> &other) {
+	offset_ = other.offset_;
+	buffer_ = other.buffer_;
+	rows_ = other.rows_;
+	cols_ = other.cols_;
+	is_copied_ = true;
+
 
 	return *this;
 }
 
-template<typename Scalar, int Rows, int Cols>
-CUDAH Scalar& Matrix<Scalar, Rows, Cols>::operator()(int row, int col) {
-	return buffer_[(row * Cols + col) * offset_];
+template<typename Scalar>
+CUDAH Scalar& Matrix<Scalar>::operator()(int row, int col) {
+	return buffer_[(row * cols_ + col) * offset_];
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH void Matrix<Scalar, Rows, Cols>::set(int row, int col, Scalar val) {
-	buffer_[(row * Cols + col) * offset_] = val;
+template <typename Scalar>
+CUDAH void Matrix<Scalar>::set(int row, int col, Scalar val) {
+	buffer_[(row * cols_ + col) * offset_] = val;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Scalar& Matrix<Scalar, Rows, Cols>::operator()(int index) {
+template <typename Scalar>
+CUDAH Scalar& Matrix<Scalar>::operator()(int index) {
 	return buffer_[index * offset_];
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH Scalar Matrix<Scalar, Rows, Cols>::at(int row, int col) const {
-	return buffer_[(row * Cols + col) * offset_];
+template <typename Scalar>
+CUDAH Scalar Matrix<Scalar>::at(int row, int col) const {
+	return buffer_[(row * cols_ + col) * offset_];
 }
 
-template <typename Scalar, int Rows, int Cols>
+template <typename Scalar>
+CUDAH Scalar Matrix<Scalar>::at(int idx) const {
+	return buffer_[idx * offset_];
+}
+
+template <typename Scalar>
 template <typename Scalar2>
-CUDAH Matrix<Scalar, Rows, Cols>& Matrix<Scalar, Rows, Cols>::operator*=(Scalar2 val)
+CUDAH Matrix<Scalar>& Matrix<Scalar>::operator*=(Scalar2 val)
 {
-#pragma unroll
-	for (int i = 0; i < Rows; i++) {
-#pragma unroll
-		for (int j = 0; j < Cols; j++) {
-			buffer_[(i * Cols + j) * offset_] *= val;
+	for (int i = 0; i < rows_; i++) {
+		for (int j = 0; j < cols_; j++) {
+			buffer_[(i * cols_ + j) * offset_] *= val;
 		}
 	}
 
 	return *this;
 }
 
-template <typename Scalar, int Rows, int Cols>
+template <typename Scalar>
 template <typename Scalar2>
-CUDAH Matrix<Scalar, Rows, Cols>& Matrix<Scalar, Rows, Cols>::operator/=(Scalar2 val)
+CUDAH Matrix<Scalar>& Matrix<Scalar>::operator/=(Scalar2 val)
 {
-#pragma unroll
-	for (int i = 0; i < Rows; i++) {
-#pragma unroll
-		for (int j = 0; j < Cols; j++) {
-			buffer_[(i * Cols + j) * offset_] /= val;
+	for (int i = 0; i < rows_; i++) {
+		for (int j = 0; j < cols_; j++) {
+			buffer_[(i * cols_ + j) * offset_] /= val;
 		}
 	}
 
 	return *this;
 }
 
-template <typename Scalar, int Rows, int Cols>
-CUDAH bool Matrix<Scalar, Rows, Cols>::transpose(Matrix<Scalar, Cols, Rows> &output) {
-#pragma unroll
-	for (int i = 0; i < Rows; i++) {
-#pragma unroll
-		for (int j = 0; j < Cols; j++) {
-			output(j, i) = buffer_[(i * Cols + j) * offset_];
+template <typename Scalar>
+CUDAH bool Matrix<Scalar>::transpose(Matrix<Scalar> &output)
+{
+	if (rows_ == output.cols_ && cols_ == output.rows_) {
+		for (int i = 0; i < rows_; i++) {
+			for (int j = 0; j < cols_; j++) {
+				output(j, i) = buffer_[(i * cols_ + j) * offset_];
+			}
 		}
+
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 //Only applicable for 3x3 matrix or below
-template <typename Scalar, int Rows, int Cols>
-CUDAH bool Matrix<Scalar, Rows, Cols>::inverse(Matrix<Scalar, Rows, Cols> &output) {
+template <typename Scalar>
+CUDAH bool Matrix<Scalar>::inverse(Matrix<Scalar> &output) {
 	return true;
 }
 
-//template <typename Scalar, int Rows, int Cols>
-//CUDAH Scalar Matrix<Scalar, Rows, Cols>::dot(const Matrix<Scalar, Rows, Cols> &other)
-//{
-//	Scalar res = 0;
-//
-//#pragma unroll
-//	for (int i = 0; i < Rows; i++) {
-//#pragma unroll
-//		for (int j = 0; j < Cols; j++) {
-//			res += buffer_[(i * Rows + j) * offset_] * other(i, j);
-//		}
-//	}
-//
-//	return res;
-//}
-
-template <typename Scalar, int Rows, int Cols>
-CUDAH Matrix<Scalar, Rows, 1> Matrix<Scalar, Rows, Cols>::col(int index) {
-	return Matrix<Scalar, Rows, 1>(offset_ * Cols, buffer_ + index * offset_);
-}
-
-template <typename Scalar, int Rows, int Cols>
-CUDAH Matrix<Scalar, 1, Cols> Matrix<Scalar, Rows, Cols>::row(int index) {
-	return Matrix<Scalar, 1, Cols>(offset_, buffer_ + index * Cols * offset_);
-}
-
-template <typename Scalar, int Rows, int Cols>
-template <int RSize>
-CUDAH Matrix<Scalar, RSize, 1> Matrix<Scalar, Rows, Cols>::col(int row, int col)
+template <typename Scalar>
+CUDAH Scalar Matrix<Scalar>::dot(const Matrix<Scalar> &other)
 {
-	return Matrix<Scalar, RSize, 1>(offset_ * Cols, buffer_ + (row * Cols + col) * offset_);
+	Scalar res = 0;
+
+	for (int i = 0; i < rows_; i++) {
+		for (int j = 0; j < cols_; j++) {
+			res += buffer_[(i * rows_ + j) * offset_] * other.at(i, j);
+		}
+	}
+
+	return res;
 }
 
-template <typename Scalar, int Rows, int Cols>
-template <int CSize>
-CUDAH Matrix<Scalar, 1, CSize> Matrix<Scalar, Rows, Cols>::row(int row, int col)
+template <typename Scalar>
+CUDAH Matrix<Scalar> Matrix<Scalar>::col(int index) {
+	return Matrix<Scalar>(rows_, 1, offset_ * cols_, buffer_ + index * offset_);
+}
+
+template <typename Scalar>
+CUDAH Matrix<Scalar> Matrix<Scalar>::row(int index) {
+	return Matrix<Scalar>(1, cols_, offset_, buffer_ + index * cols_ * offset_);
+}
+
+template <typename Scalar>
+CUDAH Matrix<Scalar> Matrix<Scalar>::col(int row, int col, int rsize)
 {
-	return Matrix<Scalar, 1, CSize>(offset_, buffer_ + (row * Cols + col) * offset_);
+	return Matrix<Scalar>(rsize, 1, offset_ * cols_, buffer_ + (row * cols_ + col) * offset_);
+}
+
+template <typename Scalar>
+CUDAH Matrix<Scalar> Matrix<Scalar>::row(int row, int col, int csize)
+{
+	return Matrix<Scalar>(1, csize, offset_, buffer_ + (row * cols_ + col) * offset_);
 }
 
 template <>
-CUDAH bool Matrix<double, 1, 1>::inverse(Matrix<double, 1, 1> &output) {
-	if (buffer_[0] != 0)
-		output(0, 0) = 1 / buffer_[0];
-	return true;
-}
-
-template <>
-CUDAH bool Matrix<double, 2, 2>::inverse(Matrix<double, 2, 2> &output) {
-	double det = at(0, 0) * at(1, 1) - at(0, 1) * at(1, 0);
-
-	if (det != 0) {
-		output(0, 0) = at(1, 1) / det;
-		output(0, 1) = - at(0, 1) / det;
-
-		output(1, 0) = - at(1, 0) / det;
-		output(1, 1) = at(0, 0) / det;
-	} else
+CUDAH bool Matrix<double>::inverse(Matrix<double> &output) {
+	if (rows_ != cols_)
 		return false;
 
-	return true;
-}
+	if (rows_ == 3) {
+		double det = at(0, 0) * at(1, 1) * at(2, 2) + at(0, 1) * at(1, 2) * at(2, 0) + at(1, 0) * at (2, 1) * at(0, 2)
+						- at(0, 2) * at(1, 1) * at(2, 0) - at(0, 1) * at(1, 0) * at(2, 2) - at(0, 0) * at(1, 2) * at(2, 1);
 
-template <>
-CUDAH bool Matrix<double, 3, 3>::inverse(Matrix<double, 3, 3> &output) {
-	double det = at(0, 0) * at(1, 1) * at(2, 2) + at(0, 1) * at(1, 2) * at(2, 0) + at(1, 0) * at (2, 1) * at(0, 2)
-					- at(0, 2) * at(1, 1) * at(2, 0) - at(0, 1) * at(1, 0) * at(2, 2) - at(0, 0) * at(1, 2) * at(2, 1);
-	double idet = 1.0 / det;
+		double idet = 1.0 / det;
 
-	if (det != 0) {
-		output(0, 0) = (at(1, 1) * at(2, 2) - at(1, 2) * at(2, 1)) * idet;
-		output(0, 1) = - (at(0, 1) * at(2, 2) - at(0, 2) * at(2, 1)) * idet;
-		output(0, 2) = (at(0, 1) * at(1, 2) - at(0, 2) * at(1, 1)) * idet;
+		if (det != 0) {
+			output(0, 0) = (at(1, 1) * at(2, 2) - at(1, 2) * at(2, 1)) * idet;
+			output(0, 1) = - (at(0, 1) * at(2, 2) - at(0, 2) * at(2, 1)) * idet;
+			output(0, 2) = (at(0, 1) * at(1, 2) - at(0, 2) * at(1, 1)) * idet;
 
-		output(1, 0) = - (at(1, 0) * at(2, 2) - at(1, 2) * at(2, 0)) * idet;
-		output(1, 1) = (at(0, 0) * at(2, 2) - at(0, 2) * at(2, 0)) * idet;
-		output(1, 2) = - (at(0, 0) * at(1, 2) - at(0, 2) * at(1, 0)) * idet;
+			output(1, 0) = - (at(1, 0) * at(2, 2) - at(1, 2) * at(2, 0)) * idet;
+			output(1, 1) = (at(0, 0) * at(2, 2) - at(0, 2) * at(2, 0)) * idet;
+			output(1, 2) = - (at(0, 0) * at(1, 2) - at(0, 2) * at(1, 0)) * idet;
 
-		output(2, 0) = (at(1, 0) * at(2, 1) - at(1, 1) * at(2, 0)) * idet;
-		output(2, 1) = - (at(0, 0) * at(2, 1) - at(0, 1) * at(2, 0)) * idet;
-		output(2, 2) = (at(0, 0) * at(1, 1) - at(0, 1) * at(1, 0)) * idet;
-	} else
-		return false;
+			output(2, 0) = (at(1, 0) * at(2, 1) - at(1, 1) * at(2, 0)) * idet;
+			output(2, 1) = - (at(0, 0) * at(2, 1) - at(0, 1) * at(2, 0)) * idet;
+			output(2, 2) = (at(0, 0) * at(1, 1) - at(0, 1) * at(1, 0)) * idet;
+		} else
+			return false;
+	}
 
 	return true;
 }
 
 
-template class Matrix<float, 3, 3>;
-template class Matrix<double, 3, 3>;
-template class Matrix<double, 6, 1>;
-template class Matrix<double, 3, 6>;		// Point gradient class
-template class Matrix<double, 18, 6>;		// Point hessian class
-template class Matrix<double, 24, 1>;
-template class Matrix<double, 45, 1>;
-
+template class Matrix<float>;
+template class Matrix<double>;
 }
 
 #endif

@@ -91,20 +91,20 @@ private:
 	double gauss_d1_, gauss_d2_;
 	double outlier_ratio_;
 	//MatrixHost j_ang_a_, j_ang_b_, j_ang_c_, j_ang_d_, j_ang_e_, j_ang_f_, j_ang_g_, j_ang_h_;
-	MatrixHost<double, 24, 1> j_ang_;
+	MatrixHost<double> j_ang_;
 
 	//MatrixHost h_ang_a2_, h_ang_a3_, h_ang_b2_, h_ang_b3_, h_ang_c2_, h_ang_c3_, h_ang_d1_, h_ang_d2_, h_ang_d3_,
 	//			h_ang_e1_, h_ang_e2_, h_ang_e3_, h_ang_f1_, h_ang_f2_, h_ang_f3_;
-	MatrixHost<double, 45, 1> h_ang_;
+	MatrixHost<double> h_ang_;
 
 
 	//MatrixDevice dj_ang_a_, dj_ang_b_, dj_ang_c_, dj_ang_d_, dj_ang_e_, dj_ang_f_, dj_ang_g_, dj_ang_h_;
-	MatrixDevice<double, 24, 1> dj_ang_;
+	MatrixDevice<double> dj_ang_;
 
 
 	//MatrixDevice dh_ang_a2_, dh_ang_a3_, dh_ang_b2_, dh_ang_b3_, dh_ang_c2_, dh_ang_c3_, dh_ang_d1_, dh_ang_d2_, dh_ang_d3_,
 	//			dh_ang_e1_, dh_ang_e2_, dh_ang_e3_, dh_ang_f1_, dh_ang_f2_, dh_ang_f3_;
-	MatrixDevice<double, 45, 1> dh_ang_;
+	MatrixDevice<double> dh_ang_;
 
 	double step_size_;
 	float resolution_;

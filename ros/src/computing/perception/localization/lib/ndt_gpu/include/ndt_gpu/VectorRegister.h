@@ -22,40 +22,28 @@ public:
 	CUDAH VectorR(const VectorR<Scalar2> &other);
 
 	template <typename Scalar2>
-	CUDAH VectorR(const MatrixDevice<Scalar2, 3, 1> &other);
-
-	template <typename Scalar2>
-	CUDAH VectorR(const MatrixDevice<Scalar2, 1, 3> &other);
+	CUDAH VectorR(const MatrixDevice<Scalar2> &other);
 
 	// Move constructors
 	template <typename Scalar2>
 	CUDAH VectorR(VectorR<Scalar2> &&other);
 
 	template <typename Scalar2>
-	CUDAH VectorR(MatrixDevice<Scalar2, 3, 1> &&other);
-
-	template <typename Scalar2>
-	CUDAH VectorR(MatrixDevice<Scalar2, 1, 3> &&other);
+	CUDAH VectorR(MatrixDevice<Scalar2> &&other);
 
 	// Copy assignments
 	template <typename Scalar2>
 	CUDAH VectorR<Scalar> &operator=(const VectorR<Scalar2> &other);
 
 	template <typename Scalar2>
-	CUDAH VectorR<Scalar> &operator=(const MatrixDevice<Scalar2, 3, 1> &other);
-
-	template <typename Scalar2>
-	CUDAH VectorR<Scalar> &operator=(const MatrixDevice<Scalar2, 1, 3> &other);
+	CUDAH VectorR<Scalar> &operator=(const MatrixDevice<Scalar2> &other);
 
 	// Move assignments
 	template <typename Scalar2>
 	CUDAH VectorR<Scalar> &operator=(VectorR<Scalar2> &&other);
 
 	template <typename Scalar2>
-	CUDAH VectorR<Scalar> &operator=(MatrixDevice<Scalar2, 3, 1> &&other);
-
-	template <typename Scalar2>
-	CUDAH VectorR<Scalar> &operator=(MatrixDevice<Scalar2, 1, 3> &&other);
+	CUDAH VectorR<Scalar> &operator=(MatrixDevice<Scalar2> &&other);
 
 	CUDAH Scalar &operator()(int col);
 
@@ -63,7 +51,7 @@ public:
 	CUDAH Scalar dot(const VectorR<Scalar2> &other);
 
 	template <typename Scalar2>
-	CUDAH Scalar dot(const Matrix<Scalar2, 3, 1> &other);
+	CUDAH Scalar dot(const Matrix<Scalar2> &other);
 
 	CUDAH VectorR<Scalar> &operator-=(const VectorR<Scalar> &other);
 	CUDAH VectorR<Scalar> &operator+=(const VectorR<Scalar> &other);
@@ -88,16 +76,7 @@ CUDAH VectorR<Scalar>::VectorR(const VectorR<Scalar2> &other)
 
 template <typename Scalar>
 template <typename Scalar2>
-CUDAH VectorR<Scalar>::VectorR(const MatrixDevice<Scalar2, 3, 1> &other)
-{
-	x_ = static_cast<Scalar>(other(0));
-	y_ = static_cast<Scalar>(other(1));
-	z_ = static_cast<Scalar>(other(2));
-}
-
-template <typename Scalar>
-template <typename Scalar2>
-CUDAH VectorR<Scalar>::VectorR(const MatrixDevice<Scalar2, 1, 3> &other)
+CUDAH VectorR<Scalar>::VectorR(const MatrixDevice<Scalar2> &other)
 {
 	x_ = static_cast<Scalar>(other(0));
 	y_ = static_cast<Scalar>(other(1));
@@ -115,22 +94,12 @@ CUDAH VectorR<Scalar>::VectorR(VectorR<Scalar2> &&other)
 
 template <typename Scalar>
 template <typename Scalar2>
-CUDAH VectorR<Scalar>::VectorR(MatrixDevice<Scalar2, 3, 1> &&other)
+CUDAH VectorR<Scalar>::VectorR(MatrixDevice<Scalar2> &&other)
 {
 	x_ = static_cast<Scalar>(other(0));
 	y_ = static_cast<Scalar>(other(1));
 	z_ = static_cast<Scalar>(other(2));
 }
-
-template <typename Scalar>
-template <typename Scalar2>
-CUDAH VectorR<Scalar>::VectorR(MatrixDevice<Scalar2, 1, 3> &&other)
-{
-	x_ = static_cast<Scalar>(other(0));
-	y_ = static_cast<Scalar>(other(1));
-	z_ = static_cast<Scalar>(other(2));
-}
-
 
 template <typename Scalar>
 template <typename Scalar2>
@@ -145,7 +114,7 @@ CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(const VectorR<Scalar2> &other)
 
 template <typename Scalar>
 template <typename Scalar2>
-CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(const MatrixDevice<Scalar2, 3, 1> &other)
+CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(const MatrixDevice<Scalar2> &other)
 {
 	x_ = static_cast<Scalar>(other(0));
 	y_ = static_cast<Scalar>(other(1));
@@ -154,16 +123,6 @@ CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(const MatrixDevice<Scalar2, 3,
 	return *this;
 }
 
-template <typename Scalar>
-template <typename Scalar2>
-CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(const MatrixDevice<Scalar2, 1, 3> &other)
-{
-	x_ = static_cast<Scalar>(other(0));
-	y_ = static_cast<Scalar>(other(1));
-	z_ = static_cast<Scalar>(other(2));
-
-	return *this;
-}
 
 template <typename Scalar>
 template <typename Scalar2>
@@ -178,18 +137,7 @@ CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(VectorR<Scalar2> &&other)
 
 template <typename Scalar>
 template <typename Scalar2>
-CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(MatrixDevice<Scalar2, 3, 1> &&other)
-{
-	x_ = static_cast<Scalar>(other(0));
-	y_ = static_cast<Scalar>(other(1));
-	z_ = static_cast<Scalar>(other(2));
-
-	return *this;
-}
-
-template <typename Scalar>
-template <typename Scalar2>
-CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(MatrixDevice<Scalar2, 1, 3> &&other)
+CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(MatrixDevice<Scalar2> &&other)
 {
 	x_ = static_cast<Scalar>(other(0));
 	y_ = static_cast<Scalar>(other(1));
@@ -201,14 +149,7 @@ CUDAH VectorR<Scalar> &VectorR<Scalar>::operator=(MatrixDevice<Scalar2, 1, 3> &&
 template <typename Scalar>
 CUDAH Scalar &VectorR<Scalar>::operator()(int col)
 {
-	switch (col) {
-	case (0):
-			return x_;
-	case (1):
-			return y_;
-	default:
-			return z_;
-	}
+	return ((col == 0) ? x_ : ((col == 1) ? y_ : z_));
 }
 
 template <typename Scalar>
@@ -220,13 +161,13 @@ CUDAH Scalar VectorR<Scalar>::dot(const VectorR<Scalar2> &other)
 
 template <typename Scalar>
 template <typename Scalar2>
-CUDAH Scalar VectorR<Scalar>::dot(const Matrix<Scalar2, 3, 1> &other)
+CUDAH Scalar VectorR<Scalar>::dot(const Matrix<Scalar2> &other)
 {
-	return x_ * static_cast<Scalar>(other(0)) + y_ * static_cast<Scalar>(other(1)) + z_ * static_cast<Scalar>(other(2));
+	return x_ * static_cast<Scalar>(other.at(0)) + y_ * static_cast<Scalar>(other.at(1)) + z_ * static_cast<Scalar>(other.at(2));
 }
 
 template <typename Scalar, typename Scalar2>
-CUDAH Scalar dot(MatrixDevice<Scalar, 3, 1> &a, VectorR<Scalar2> &b)
+CUDAH Scalar dot(MatrixDevice<Scalar> &a, VectorR<Scalar2> &b)
 {
 	return a(0) * b(0) + a(1) * b(1) + a(2) * b(2);
 }
