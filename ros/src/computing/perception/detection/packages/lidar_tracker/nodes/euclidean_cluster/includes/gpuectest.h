@@ -75,6 +75,9 @@ private:
 	static void cpuBasedTest(pcl::PointCloud<pcl::PointXYZ>::Ptr input, float threshold,
 									long long &c_total_time, long long &c_clustering_time, long long &c_tree_build);
 
+	static void pclGpuBasedTest(pcl::PointCloud<pcl::PointXYZ>::Ptr input, float threshold,
+									long long &c_total_time, long long &c_clustering_time, long long &c_tree_build);
+
 };
 
 #ifndef timeDiff

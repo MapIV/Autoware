@@ -3,6 +3,12 @@
 #include <pcl/search/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 
+// For PCL GPU Clustering
+#include <pcl/gpu/octree/octree.hpp>
+#include <pcl/gpu/containers/device_array.hpp>
+#include <pcl/gpu/segmentation/gpu_extract_clusters.h>
+#include <pcl/gpu/segmentation/impl/gpu_extract_clusters.hpp>
+
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -105,8 +111,8 @@ void GPUECTest::pointCloudVariationTest()
 
 	test_result << "****** Point Num Variation Test *****" << std::endl;
 	test_result << "point_num varies disjoint num = 128 point degree = 32 point distance = 4" << std::endl;
-	test_result << "Point num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Point num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU,";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	for (point_num = 128 * 32; point_num <= 262144; point_num *= 2) {
@@ -122,8 +128,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Disjoint Comp Num Variation Test *****" << std::endl;
 	test_result << "Cluster num varies point num = 262144 point degree = 32 point distance = 4" << std::endl;
 
-	test_result << "Cluster num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Cluster num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU, ";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	// Disjoint_comp_num variation, point_num fix, joint_comp_num fix, and point_distance
@@ -142,8 +148,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Disjoint Comp Num Variation Test *****" << std::endl;
 	test_result << "Cluster num varies point num = 32768 point degree = 32 point distance = 4" << std::endl;
 
-	test_result << "Cluster num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Cluster num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU, ";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	// Disjoint_comp_num variation, point_num fix, joint_comp_num fix, and point_distance
@@ -164,8 +170,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Disjoint Comp Num Variation Test *****" << std::endl;
 	test_result << "Cluster num varies point num = 4096 point degree = 32 point distance = 4" << std::endl;
 
-	test_result << "Cluster num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Cluster num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU, ";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	// Disjoint_comp_num variation, point_num fix, joint_comp_num fix, and point_distance
@@ -187,8 +193,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Point degree Variation Test *****" << std::endl;
 	test_result << "Neighbor num varies point num = 262144 disjoint num = 128 point distance = 4" << std::endl;
 
-	test_result << "Neighbor num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Neighbor num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU, ";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	// Joint_comp_num variation, point_num, disjoint_comp_num, and point_distance are fixed
@@ -209,8 +215,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Joint Comp Num Variation Test *****" << std::endl;
 	test_result << "Neighbor num varies point num = 32768 disjoint num = 128 point distance = 4" << std::endl;
 
-	test_result << "Neighbor num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Neighbor num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU, ";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	// Joint_comp_num variation, point_num, disjoint_comp_num, and point_distance are fixed
@@ -230,8 +236,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Joint Comp Num Variation Test *****" << std::endl;
 	test_result << "Neighbor num varies point num = 4096 disjoint num = 128 point distance = 4" << std::endl;
 
-	test_result << "Neighbor num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Neighbor num, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU, ";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	// Joint_comp_num variation, point_num, disjoint_comp_num, and point_distance are fixed
@@ -250,8 +256,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Point Distance Variation Test *****" << std::endl;
 	test_result << "Point distance varies point num = 65536 disjoint num = 256 joint_num = 32" << std::endl;
 
-	test_result << "Point distance, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Point distance, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU, ";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	// Point distance variation, others are fixed
@@ -282,8 +288,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Point Distance Variation Test *****" << std::endl;
 	test_result << "Point distance varies point num = 65536 disjoint num = 1024 joint_num = 32" << std::endl;
 
-	test_result << "Point distance, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Point distance, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU,";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 
@@ -312,8 +318,8 @@ void GPUECTest::pointCloudVariationTest()
 	test_result << "***** Point Distance Variation Test *****" << std::endl;
 	test_result << "Point distance varies point num = 65536 disjoint num = 2048 joint_num = 32" << std::endl;
 
-	test_result << "Point distance, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL, ";
-	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL,, ";
+	test_result << "Point distance, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU,";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
 	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
 
 	point_num = 65536;
@@ -337,6 +343,27 @@ void GPUECTest::pointCloudVariationTest()
 //	test_result << std::endl << std::endl << std::endl;
 
 	std::cout << "END OF POINT CLOUD VARIATION TEST" << std::endl;
+
+	// Point distance variation, others are fixed
+	std::cout << "########################### Point Distance Variation Test ###########################" << std::endl;
+	test_result << "***** Point Distance Variation Test *****" << std::endl;
+	test_result << "Point distance varies point num = 262144 disjoint num = 2048 joint_num = 32" << std::endl;
+
+	test_result << "Point distance, E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based, PCL CPU, PCL GPU,";
+	test_result << "E Edge-based,,, E Matrix-based,,,, E Vertex-based,,, RS Edge-based,,, RS Matrix-based,,,, RS Vertex-based,,, PCL CPU,, PCL GPU,, ";
+	test_result << "E Edge-based, E Matrix-based, E Vertex-based, RS Edge-based, RS Matrix-based, RS Vertex-based" << std::endl;
+
+	point_num = 262144;
+	disjoint_comp_num = 2048;
+	joint_comp_num = 32;
+
+	base_cloud = pointCloudGeneration(point_num, disjoint_comp_num, joint_comp_num);
+	for (point_distance = 1; point_distance <= 512; point_distance *= 2) {
+		std::string res = pointDistanceTest(base_cloud, point_distance);
+		test_result << point_distance << "," << res << std::endl;
+	}
+
+	test_result << std::endl << std::endl << std::endl;
 
 	exit(1);
 //	std::cout << "***** LINE TEST *****" << std::endl;
@@ -766,25 +793,36 @@ std::string GPUECTest::test(pcl::PointCloud<pcl::PointXYZ>::Ptr input, int block
 {
 	std::ostringstream output;
 
+	// Exhaustive Search edge-based execution time
 	long long e_set_input, e_total_time, e_graph_time, e_clustering_time;
 	int e_itr_num;
 
+	// Range Search edge-based execution time
 	long long e_set_input2, e_total_time2, e_graph_time2, e_clustering_time2;
 	int e_itr_num2;
 
+	// Exhaustive Search matrix-based execution time
 	long long m_set_input, m_total_time, m_initial, m_build_matrix, m_clustering_time;
 	int m_itr_num;
 
+	// Range Search matrix-based execution time
 	long long m_set_input2, m_total_time2, m_initial2, m_build_matrix2, m_clustering_time2;
 	int m_itr_num2;
 
+	// Exhaustive Search vertex-based execution time
 	long long v_set_input, v_total_time, v_graph_time, v_clustering_time;
 	int v_itr_num;
 
+	// Range Search vertex-based execution time
 	long long v_set_input2, v_total_time2, v_graph_time2, v_clustering_time2;
 	int v_itr_num2;
 
-	long long c_total_time, c_clustering_time, c_tree_build;
+	// PCL CPU-based execution time
+	long long pc_total_time, pc_clustering_time, pc_tree_build;
+
+	// PCL GPU-based execution time
+	long long pg_total_time, pg_clustering_time, pg_tree_build;
+
 	int *tmp;
 	int htmp = 0;
 
@@ -818,11 +856,13 @@ std::string GPUECTest::test(pcl::PointCloud<pcl::PointXYZ>::Ptr input, int block
 	rsmatrixBasedTest(input, block_size, threshold, m_total_time2, m_set_input2, m_initial2, m_build_matrix2, m_clustering_time2, m_itr_num2);
 	cudaDeviceReset();
 
-	cpuBasedTest(input, threshold, c_total_time, c_clustering_time, c_tree_build);
+	cpuBasedTest(input, threshold, pc_total_time, pc_clustering_time, pc_tree_build);
+
+	pclGpuBasedTest(input, threshold, pg_total_time, pg_clustering_time, pg_tree_build);
 
 
 	// Total execution time
-	output << e_total_time << "," << m_total_time << "," << v_total_time << "," << e_total_time2 << "," << m_total_time2 << "," << v_total_time2 << "," << c_total_time << ",";
+	output << e_total_time << "," << m_total_time << "," << v_total_time << "," << e_total_time2 << "," << m_total_time2 << "," << v_total_time2 << "," << pc_total_time << "," << pg_total_time << ",";
 
 	// Breakdown
 	output << e_set_input << "," << e_graph_time << "," << e_clustering_time << ",";
@@ -835,7 +875,10 @@ std::string GPUECTest::test(pcl::PointCloud<pcl::PointXYZ>::Ptr input, int block
 
 
 	// Cpu-based
-	output << c_tree_build << "," << c_clustering_time << ",";
+	output << pc_tree_build << "," << pc_clustering_time << ",";
+
+	// PCL gpu-based
+	output << pg_tree_build << "," << pg_clustering_time << ",";
 
 	// Iteration number
 	output << e_itr_num << "," << m_itr_num << "," << v_itr_num << "," << e_itr_num2 << "," << m_itr_num2 << "," << v_itr_num2;
@@ -998,7 +1041,7 @@ void GPUECTest::rsvertexBasedTest(pcl::PointCloud<pcl::PointXYZ>::Ptr input, int
 }
 
 void GPUECTest::cpuBasedTest(pcl::PointCloud<pcl::PointXYZ>::Ptr input, float threshold,
-								long long &c_total_time, long long &c_clustering_time, long long &c_tree_build)
+								long long &pc_total_time, long long &pc_clustering_time, long long &pc_tree_build)
 {
 	struct timeval start, end;
 
@@ -1022,8 +1065,47 @@ void GPUECTest::cpuBasedTest(pcl::PointCloud<pcl::PointXYZ>::Ptr input, float th
 
 	std::cout << "PCL Cluster num = " << cluster_indices.size() << std::endl;
 
-	c_total_time = timeDiff(start, end);
-	c_clustering_time = c_total_time - c_tree_build;
+	pc_total_time = timeDiff(start, end);
+	pc_clustering_time = pc_total_time - pc_tree_build;
 
-	std::cout << "PCL: total exec time = " << c_total_time << std::endl << std::endl;
+	std::cout << "PCL: total exec time = " << pc_total_time << std::endl << std::endl;
 }
+
+void GPUECTest::pclGpuBasedTest(pcl::PointCloud<pcl::PointXYZ>::Ptr input, float threshold,
+								long long &pg_total_time, long long &pg_clustering_time, long long &pg_tree_build)
+{
+	struct timeval start, end;
+
+	gettimeofday(&start, NULL);
+	pcl::gpu::Octree::PointCloud cloud_device;
+
+	cloud_device.upload(input->points);
+
+	pcl::gpu::Octree::Ptr octree_device(new pcl::gpu::Octree);
+	octree_device->setCloud(cloud_device);
+	octree_device->build();
+
+	gettimeofday(&end, NULL);
+
+	c_tree_build = timeDiff(start, end);
+
+	std::vector<pcl::PointIndices> cluster_indices;
+
+	pcl::gpu::EuclideanClusterExtraction gec;
+
+	gec.setHostCloud(input);
+	gec.setClusterTolerance(threshold);
+	gec.setSearchMethod(octree_device);
+	gec.extract(cluster_indices);
+
+	gettimeofday(&end, NULL);
+
+	std::cout << "PCL GPU Cluster num = " << cluster_indices.size() << std::endl;
+
+	pg_total_time = timeDiff(start, end);
+	pg_clustering_time = pg_total_time - pg_tree_build;
+
+	std::cout << "PCL GPU: total exec time = " << pg_total_time << std::endl << std::endl;
+}
+
+
